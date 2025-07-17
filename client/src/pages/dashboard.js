@@ -327,6 +327,12 @@ const DashboardPage = () => {
     setDayWiseData(computedDayWiseData);
   }, [computedDayWiseData]);
 
+  const textColorMap = {
+    blue: "text-blue-700",
+    green: "text-green-700",
+    indigo: "text-indigo-700",
+  };
+
   const SummaryCard = ({ icon, label, value }) => (
     <div className="bg-white p-6 rounded-xl shadow-md flex items-center gap-4">
       {icon}
@@ -340,7 +346,7 @@ const DashboardPage = () => {
   const ComparisonCard = ({ label, amount, change, color }) => (
     <div className="bg-white p-6 rounded-xl shadow-md">
       <p className="text-sm text-gray-500 mb-1">{label}</p>
-      <p className={`text-2xl font-bold text-${color}-700`}>
+      <p className={`text-2xl font-bold ${textColorMap[color]}`}>
         ₹{amount.toFixed(2)} <span className="text-sm">{change}</span>
       </p>
     </div>
