@@ -29,7 +29,7 @@ router.post("/", async (req, res) => {
 {/* Add Expense with single invoice */}
 router.post("/add", upload.single("invoice"), addExpense);
 
-{/* Upload invoice */}
+{/* Upload invoice in existing expense*/}
 router.put("/:id/upload-invoice", upload.single("invoice"), async (req, res) => {
   try {
     const expense = await Expense.findByPk(req.params.id);
@@ -99,6 +99,51 @@ router.put("/:id", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: "Failed to update expense" });
   }
+});
+
+{/*Download Invoice*/}
+router.get("/download/:filename", (req, res) => {
+  const filePath = path.join(__dirname, "../uploads/invoices", req.params.filename);
+  if (fs.existsSync(filePath)) {
+    res.download(filePath); // Forces download
+  } else {
+    res.status(404).json({ error: "File not found" });
+  }
+});
+
+{/* Delete Expense by id*/}
+router.delete("/:id", async (req, res) => {
+  try {
+    const expense = await Expense.findByPk(req.params.id);
+    if (!expense) {
+      return res.status(404).json({ error: "Expense not found" });
+    }
+
+    // Delete invoice file if it exists
+    if (expense.invoice) {
+      const invoicePath = path.join(__dirname, "..", expense.invoice);
+      fs.unlink(invoicePath, (err) => {
+        if (err) console.error("Failed to delete invoice file:", err);
+      });
+    }
+
+    await expense.destroy();
+    res.status(204).send();
+  } catch (err) {
+    console.error("Delete error:", err);
+    res.status(500).json({ error: "Failed to delete expense" });
+  }
+});
+
+{/*Remove invoice from existing expense*/}
+router.put('/:id/remove-invoice', async (req, res) => {
+  const expense = await Expense.findByPk(req.params.id);
+  if (!expense) return res.status(404).json({ error: "Expense not found" });
+
+  expense.invoice = null;
+  await expense.save();
+
+  res.json(expense);
 });
 
 module.exports = router;
