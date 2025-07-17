@@ -1,5 +1,10 @@
-import { useEffect, useState } from "react";
+// Import core React features: useEffect (lifecycle), useState (state), useRef (DOM references)
+import React, { useEffect, useState, useRef } from "react";
+
+// Import Axios for making HTTP requests to the backend
 import axios from "axios";
+
+// Import React icons
 import {
   FaRupeeSign,
   FaCalendarAlt,
@@ -7,11 +12,19 @@ import {
   FaPen,
   FaCheckCircle,
   FaTimesCircle,
+  FaPlus,
+  FaEye,
+  FaTrash,
 } from "react-icons/fa";
 
-const EXPENSE_API = "http://localhost:4000/api/expenses";
-const CATEGORY_API = "http://localhost:4000/api/categories";
+// Define API endpoints using environment variable or fallback to localhost
+const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
+// Endpoint to add a new expense
+const EXPENSE_API = `${BASE_URL}/api/expenses/add`;
+// Endpoint to fetch categories (default + user-defined)
+const CATEGORY_API = `${BASE_URL}/api/categories`;
 
+//Default Categories given to user
 const DEFAULT_CATEGORIES = [
   { id: "default-1", name: "Food" },
   { id: "default-2", name: "Transport" },
@@ -22,18 +35,26 @@ const DEFAULT_CATEGORIES = [
   { id: "default-7", name: "Others" },
 ];
 
+
 const AddExpense = () => {
+
+  //Intialize a Form state using useState Hook
   const [form, setForm] = useState({
     title: "",
     amount: "",
     date: "",
     category: DEFAULT_CATEGORIES[0].name,
     description: "",
+    invoice: null,
   });
 
+  //Used to track the status of some process
   const [status, setStatus] = useState(null);
+
+  //Holds the current list of categories available for selection.
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
 
+  // Fetch and merge user-defined categories with defaults on component mount
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -63,134 +84,245 @@ const AddExpense = () => {
     fetchCategories();
   }, []);
 
+  // Handle form submission: send expense data (with optional invoice) to backend
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent default form submission behavior
+
     try {
-      await axios.post(EXPENSE_API, {
-        ...form,
-        amount: parseFloat(form.amount),
+      const formData = new FormData(); // Create a FormData object to handle file upload
+
+      // Append form fields to FormData
+      formData.append("title", form.title);
+      formData.append("amount", form.amount);
+      formData.append("date", form.date);
+      formData.append("category", form.category);
+      formData.append("description", form.description);
+
+      // Append invoice file if it exists
+      if (form.invoice) {
+        formData.append("invoice", form.invoice);
+      }
+
+      // Send the form data to the backend API
+      await axios.post(EXPENSE_API, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
+
+      // On successful submission, show success status and reset form fields
       setStatus("success");
       setForm({
         title: "",
         amount: "",
         date: "",
-        category: categories[0]?.name || "",
+        category: categories[0]?.name || "", // Reset to first available category
         description: "",
+        invoice: null,
       });
     } catch (error) {
+      // On error, show error status and log the error
       setStatus("error");
       console.error(error);
     }
 
+    // Clear the status message after 3 seconds
     setTimeout(() => setStatus(null), 3000);
   };
 
+  // Ref for accessing and triggering the hidden file input programmatically
+  const fileInputRef = useRef(null);
+
+  /*
+    Add Expense Page UI:
+    - Full-screen, centered layout with gradient background and card-style container.
+    - Displays success or error message based on form submission status.
+    - Form includes inputs for:
+      - Title (text)
+      - Amount (number)
+      - Date (date picker)
+      - Category (dropdown from available categories)
+      - Description (textarea for optional notes)
+    - Right section allows uploading an invoice (PDF/image):
+      - If not uploaded: shows "+" button to trigger file picker.
+      - If uploaded: previews image or embedded PDF.
+      - Provides options to view in new tab or delete the file.
+    - Uses Tailwind CSS classes for styling and animation effects.
+    - Submit button sends form data to the backend via `handleSubmit`.
+  */
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-10 px-6">
-      <div className="max-w-2xl mx-auto bg-white shadow-2xl p-8 rounded-2xl animate-fadeIn">
-        <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-          <FaPen className="text-blue-500" /> Add New Expense
+    // Full-screen container with a gradient background and centered content
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-blue-100 flex items-center justify-center px-4 py-12">
+
+      {/* Main card container */}
+      <div className="w-full max-w-5xl bg-white/80 backdrop-blur-md shadow-2xl rounded-3xl p-10 border border-gray-200 animate-fade-in">
+
+        {/* Header */}
+        <h2 className="text-4xl font-bold text-gray-800 mb-10 text-center flex items-center justify-center gap-3 animate-fade-in-down">
+          <FaPen className="text-indigo-600" />
+          Add New Expense
         </h2>
 
+        {/* Status messages */}
         {status === "success" && (
-          <div className="mb-4 text-green-600 flex items-center gap-2">
-            <FaCheckCircle />
-            Expense added successfully!
+          <div className="mb-6 text-green-600 flex items-center justify-center gap-2 animate-bounce-in">
+            <FaCheckCircle className="text-lg" />
+            <span>Expense added successfully!</span>
           </div>
         )}
         {status === "error" && (
-          <div className="mb-4 text-red-600 flex items-center gap-2">
-            <FaTimesCircle />
-            Failed to add expense.
+          <div className="mb-6 text-red-600 flex items-center justify-center gap-2 animate-shake">
+            <FaTimesCircle className="text-lg" />
+            <span>Failed to add expense.</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Title */}
-          <div>
-            <label className="text-sm text-gray-600 mb-1 block">Title</label>
-            <div className="flex items-center border rounded px-4 py-2 focus-within:ring-2 focus-within:ring-blue-300">
-              <FaPen className="text-gray-500 mr-3" />
+        {/* Form starts here */}
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+
+            {/* Left Column: Form Fields */}
+            <div className="space-y-6 border border-indigo-300 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:scale-[1.01] hover:border-indigo-500 h-full shadow-inner animate-fade-in-up animation-delay-500">
+
+              {/* Map over fields to render Title, Amount, and Date */}
+              {[
+                { label: 'Title', icon: <FaPen />, type: 'text', key: 'title', placeholder: 'e.g., Grocery' },
+                { label: 'Amount', icon: <FaRupeeSign />, type: 'number', key: 'amount', placeholder: 'e.g., 500' },
+                { label: 'Date', icon: <FaCalendarAlt />, type: 'date', key: 'date' },
+              ].map((field, idx) => (
+                <div 
+                key={field.key} 
+                className={`animate-fade-in-up animation-delay-${idx * 100}`}
+                >
+                  <label className="text-gray-600 block mb-1 font-medium">{field.label}</label>
+                  <div className="relative">
+
+                    {/* Icon inside input field */}
+                    {React.cloneElement(field.icon, { className: 'absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500' })}
+                    <input
+                      type={field.type}
+                      placeholder={field.placeholder || ''}
+                      value={form[field.key]}
+                      onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
+                      maxLength={field.key === "title" ? 100 : undefined} // Limit title to 100 chars
+                      className="w-full pl-10 pr-4 py-3 border-b-2 border-indigo-300 bg-transparent focus:outline-none focus:border-indigo-500 transition"
+                      required
+                    />
+                  </div>
+                </div>
+              ))}
+
+              {/* Category Dropdown*/}
+              <div className="animate-fade-in-up animation-delay-300">
+                <label className="text-gray-600 block mb-1 font-medium">Category</label>
+                <div className="relative">
+                  <FaTags className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500" />
+                  <select
+                    value={form.category}
+                    onChange={(e) => setForm({ ...form, category: e.target.value })}
+                    className="w-full pl-10 pr-4 py-3 border-b-2 border-indigo-300 bg-transparent focus:outline-none focus:border-indigo-500 text-gray-800"
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat.id || cat.name} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Description textarea*/}
+              <div className="animate-fade-in-up animation-delay-400">
+                <label className="text-gray-600 block mb-1 font-medium">Description</label>
+                <textarea
+                  placeholder="Optional notes about this expense"
+                  maxLength={255}
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-3 border-b-2 border-indigo-300 bg-transparent outline-none text-gray-800 placeholder-gray-500 resize-none focus:border-indigo-500 transition"
+                />
+                
+                {/* ✅ Character counter for description */}
+                <p className="text-sm text-gray-500 text-right">
+                  {form.description.length}/255 characters
+                </p>
+              </div>
+            </div>
+
+            {/* Right Column: Invoice Upload Area*/}
+            <div className="relative flex flex-col items-center justify-center text-center bg-white/60 backdrop-blur border border-indigo-300 hover:shadow-xl hover:scale-[1.01] hover:border-indigo-500 transition-all duration-300 rounded-2xl p-8 h-full shadow-inner animate-fade-in-up animation-delay-500">
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">Invoice</h3>
+              <p className="text-gray-500 text-sm mb-4">PDF or Image (JPEG/PNG)</p>
+
+              {/* Upload button when no file is selected */}
+              {!form.invoice && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current.click()}
+                  className="flex items-center justify-center w-16 h-16 bg-indigo-200 rounded-full hover:bg-indigo-300 transition">
+                  <FaPlus className="text-indigo-600 text-2xl" />
+                </button>
+              )}
+
+              {/* Show file preview and action buttons if file is selected */}
+              {form.invoice && (
+                <>
+                  <div className="w-full max-h-60 overflow-hidden rounded-lg border border-gray-300 mb-4">
+                    {form.invoice.type.includes('image') ? (
+                      // Image preview
+                      <img
+                        src={URL.createObjectURL(form.invoice)}
+                        alt="Invoice Preview"
+                        className="object-contain max-h-60 mx-auto"
+                      />
+                    ) : (
+                      // PDF preview
+                      <embed
+                        src={URL.createObjectURL(form.invoice)}
+                        type="application/pdf"
+                        className="w-full h-60"
+                      />
+                    )}
+                  </div>
+
+                  {/* View and Delete buttons */}
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      onClick={() => window.open(URL.createObjectURL(form.invoice), '_blank')}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                      <FaEye /> View
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, invoice: null })}
+                      className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
+                      <FaTrash /> Delete
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* Hidden File Input */}
               <input
-                type="text"
-                placeholder="e.g., Grocery shopping"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className="w-full outline-none text-gray-800"
-                required
+                type="file"
+                accept="image/*,.pdf"
+                ref={fileInputRef}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setForm({ ...form, invoice: file });
+                }}
+                className="hidden"
               />
             </div>
           </div>
 
-          {/* Amount */}
-          <div>
-            <label className="text-sm text-gray-600 mb-1 block">Amount</label>
-            <div className="flex items-center border rounded px-4 py-2 focus-within:ring-2 focus-within:ring-blue-300">
-              <FaRupeeSign className="text-gray-500 mr-3" />
-              <input
-                type="number"
-                placeholder="e.g., 500"
-                value={form.amount}
-                onChange={(e) => setForm({ ...form, amount: e.target.value })}
-                className="w-full outline-none text-gray-800"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Date */}
-          <div>
-            <label className="text-sm text-gray-600 mb-1 block">Date</label>
-            <div className="flex items-center border rounded px-4 py-2 focus-within:ring-2 focus-within:ring-blue-300">
-              <FaCalendarAlt className="text-gray-500 mr-3" />
-              <input
-                type="date"
-                value={form.date}
-                onChange={(e) => setForm({ ...form, date: e.target.value })}
-                className="w-full outline-none text-gray-800"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Category */}
-          <div>
-            <label className="text-sm text-gray-600 mb-1 block">Category</label>
-            <div className="flex items-center border rounded px-4 py-2 focus-within:ring-2 focus-within:ring-blue-300">
-              <FaTags className="text-gray-500 mr-3" />
-              <select
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                className="w-full outline-none bg-transparent text-gray-800"
-              >
-                {categories.map((cat) => (
-                  <option key={cat.id || cat.name} value={cat.name}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="text-sm text-gray-600 mb-1 block">Description</label>
-            <textarea
-              placeholder="Optional notes about this expense"
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              rows={3}
-              className="w-full border rounded px-4 py-2 outline-none focus:ring-2 focus:ring-blue-300 text-gray-800 resize-none"
-            />
-          </div>
-
-          {/* Submit */}
-          <div>
+          {/* Submit Button */}
+          <div className="pt-10 text-center animate-fade-in-up animation-delay-600">
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white font-semibold py-2 rounded hover:bg-blue-700 transition"
-            >
+              className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold py-3 px-10 rounded-xl shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300">
               Add Expense
             </button>
           </div>
@@ -198,6 +330,7 @@ const AddExpense = () => {
       </div>
     </div>
   );
+
 };
 
 export default AddExpense;
