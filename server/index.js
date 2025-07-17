@@ -21,6 +21,8 @@ app.use("/api/expenses", require("./routes/expenses"));
  // Mounts all category-related routes at '/api/categories'
 app.use("/api/categories", require("./routes/categories"));
 
+app.use("/api", downloadRoutes);
+
 // Syncs the database models and starts the server after successful sync
 db.sequelize.sync().then(() => {
   app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
