@@ -4,16 +4,18 @@ import {
   FaPlusCircle,
   FaListUl,
   FaHome,
-  FaTags,
   FaUserCircle,
+  FaFileInvoice
 } from "react-icons/fa";
+import { BiSolidCategory } from "react-icons/bi";
 
 const navItems = [
   { name: "Dashboard", path: "/dashboard", icon: <FaHome /> },
   { name: "Add Expense", path: "/add", icon: <FaPlusCircle /> },
   { name: "All Expenses", path: "/expenses", icon: <FaListUl /> },
+  { name: "All Invoices", path: "/invoices", icon: <FaFileInvoice /> },
   { name: "Analytics", path: "/analytics", icon: <FaChartPie /> },
-  { name: "Categories", path: "/categories", icon: <FaTags /> },
+  { name: "Categories", path: "/categories", icon: <BiSolidCategory /> },
 ];
 
 const Sidebar = () => {
