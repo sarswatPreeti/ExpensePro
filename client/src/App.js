@@ -5,6 +5,8 @@ import HomePage from "./pages/homePage";
 import AddExpense from "./pages/addExpense";
 import AllExpenses from "./pages/allExpenses";
 import ALLInvoice from "./pages/allInvoices"; 
+import Invoice from "./pages/singleInvoice";
+import EditInvoice from "./pages/editInvoice"; 
 import Analytics from "./pages/analytics";
 import Categories from "./pages/categories";
 import Profile from "./pages/profile";
@@ -21,6 +23,8 @@ function App() {
             <Route path="/add" element={<AddExpense />} />
             <Route path="/expenses" element={<AllExpenses />} />
             <Route path="/invoices" element={<ALLInvoice />} />
+            <Route path="/invoice/:id" element={<Invoice />} />
+            <Route path="/edit-invoice/:id" element={<EditInvoice />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/profile" element={<Profile/>}/>
