@@ -1,7 +1,13 @@
+/* Tailwind base styles (preflight resets) */
 @tailwind base;
+
+/* Tailwind base styles (preflight resets) */
 @tailwind components;
+
+/* Tailwind utility classes (margins, paddings, colors, etc.) */
 @tailwind utilities;
 
+/* Global body styles for smoother font rendering and clean layout */
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -11,11 +17,20 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* HTML element tweaks */
+html {
+  scroll-behavior: smooth; /* Enables smooth scrolling for anchor links */
+  margin: 0;
+  padding: 0;
+}
+
+/* Code block font styling */
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
 
+/* Fade-in animation for smooth element entrance */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -30,6 +45,7 @@ code {
   animation: fade-in 0.4s ease-out;
 }
 
+/* Slide-in animation from top */
 @keyframes slide-in {
   from {
     opacity: 0;
@@ -44,11 +60,12 @@ code {
   animation: slide-in 0.5s ease-out;
 }
 
-/* Add this class for highlighting */
+/* Used to mark a specific day in calendar-style expense components */
 .expense-day {
   position: relative;
 }
 
+/* Adds a small red dot at the bottom center of an .expense-day element */
 .expense-day::after {
   content: '';
   position: absolute;
@@ -61,6 +78,7 @@ code {
   border-radius: 50%;
 }
 
+/* Adds a tooltip with the value of `data-title` when hovering over a tile */
 .expense-tile[data-title]:hover::after {
   content: attr(data-title);
   position: absolute;
@@ -74,4 +92,35 @@ code {
   border-radius: 4px;
   white-space: nowrap;
   z-index: 10;
+}
+
+/* Floating animation (like gentle up-down motion) */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-float-sm {
+  animation: float 3.5s ease-in-out infinite;
+}
+
+/* Pop-in animation for attention-grabbing text or elements */
+@keyframes pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-pop {
+  animation: pop 1.2s ease-out forwards;
 }
