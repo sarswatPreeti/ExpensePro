@@ -8,7 +8,7 @@ const EditInvoice = () => {
     const navigate = useNavigate();
     const [expense, setExpense] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
-    const [preview, setPreview] = useState(null);
+    // const [preview, setPreview] = useState(null);
 
     useEffect(() => {
         const fetchExpense = async () => {
@@ -19,7 +19,7 @@ const EditInvoice = () => {
             setExpense(res.data);
 
             // If the invoice exists, set the preview URL to display (image or PDF)
-            setPreview(res.data.invoice ? `http://localhost:4000/${res.data.invoice}` : null);
+            // setPreview(res.data.invoice ? `http://localhost:4000/${res.data.invoice}` : null);
         } catch (err) {
             console.error("Error fetching invoice:", err);
         }
@@ -38,10 +38,10 @@ const EditInvoice = () => {
         setSelectedFile(file);
         // If the file is not a PDF, create a preview URL for it (e.g., image)
         if (file && !file.name.endsWith(".pdf")) {
-            setPreview(URL.createObjectURL(file));
+            // setPreview(URL.createObjectURL(file));
         } else {
             // For PDFs or if no file is selected, do not set a preview
-            setPreview(null);
+            // setPreview(null);
         }
     };
 
@@ -49,7 +49,7 @@ const EditInvoice = () => {
         navigate(-1); // Go back without saving
     };
 
-    {/* Uploads selected invoice file to the server and navigates to the invoice detail page */}
+    /* Uploads selected invoice file to the server and navigates to the invoice detail page */
     const handleUpload = async () => {
         if (!selectedFile) return alert("Please select a file to upload.");
 
