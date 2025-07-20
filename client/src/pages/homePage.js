@@ -1,3 +1,4 @@
+import React from "react";
 import TopNavbar from "../components/topNavbar";
 import FeatureSection from "../components/featureCard";
 import AuthSection from "../components/authSection";
