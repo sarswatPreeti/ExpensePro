@@ -1,4 +1,3 @@
-import React from "react";
 import { useLocation } from "react-router-dom"; // Hook to access the current route location
 import Sidebar from "../components/sidebar";
 

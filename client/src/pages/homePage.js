@@ -1,4 +1,3 @@
-import React from "react";
 import TopNavbar from "../components/topNavbar";
 import FeatureSection from "../components/featureCard";
 import AuthSection from "../components/authSection";
@@ -284,8 +283,7 @@ const HomePage = () => {
           .toLowerCase()
           .trim()
           .replace(/\s+/g, "-") // replace spaces with dashes
-          .replace(/[^a-z0-9\-]/g, ""); // remove special characters
-
+          .replace(/[^a-z0-9-]/g, ""); // remove special characters
           return(
             <FeatureSection
               key={index}
