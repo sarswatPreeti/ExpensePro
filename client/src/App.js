@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, useNavigate } from "react-router-dom";
 import ScrollToTop from "./components/scrollToTop";
 import Dashboard from "./pages/dashboard";
 import HomePage from "./pages/homePage";
@@ -12,7 +12,32 @@ import EditInvoice from "./pages/editInvoice";
 import Analytics from "./pages/analytics";
 import Categories from "./pages/categories";
 import Profile from "./pages/profile";
+import EditProfile from "./pages/editProfile";
 import MainLayout from "./layouts/mainLayout";
+import { useEffect } from "react";
+
+// Helper function to get jwtToken
+const getToken = () => localStorage.getItem("jwtToken");
+
+// Protects private routes
+const PrivateRoute = ({ children }) => {
+  const token = getToken();
+  return token ? children : <Navigate to="/login" replace />;
+};
+
+const AuthRedirect = ({ children }) => {
+  const token = localStorage.getItem("jwtToken");
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (token && (location.pathname === "/login" || location.pathname === "/register")) {
+      navigate("/dashboard");
+    }
+  }, [token, location.pathname, navigate]);
+
+  return children;
+};
 
 function App() {
   return (
@@ -21,17 +46,78 @@ function App() {
       <MainLayout>
         <Routes>
           <Route path="/" element={<HomePage/>} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/dashboard" element={<Dashboard/>}/>
-          <Route path="/add" element={<AddExpense />} />
-          <Route path="/expenses" element={<AllExpenses />} />
-          <Route path="/invoices" element={<ALLInvoice />} />
-          <Route path="/invoice/:id" element={<Invoice />} />
-          <Route path="/edit-invoice/:id" element={<EditInvoice />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/categories" element={<Categories />} />
-          <Route path="/profile" element={<Profile/>}/>
+
+          <Route path="/login" element={
+            <AuthRedirect>
+              <LoginPage />
+            </AuthRedirect>
+          } />
+
+          <Route path="/register" element={
+            <AuthRedirect>
+              <RegisterPage />
+            </AuthRedirect>
+          } />
+
+          <Route path="/dashboard" element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          } />
+
+          <Route path="/add" element={
+            <PrivateRoute>
+              <AddExpense />
+            </PrivateRoute>
+          } />
+
+          <Route path="/expenses" element={
+            <PrivateRoute>
+              <AllExpenses />
+            </PrivateRoute>
+          } />
+
+          <Route path="/invoices" element={
+            <PrivateRoute>
+              <ALLInvoice />
+            </PrivateRoute>
+          } />
+
+          <Route path="/invoice/:id" element={
+            <PrivateRoute>
+              <Invoice />
+            </PrivateRoute>
+          } />
+
+          <Route path="/edit-invoice/:id" element={
+            <PrivateRoute>
+              <EditInvoice />
+            </PrivateRoute>
+          } />
+
+          <Route path="/analytics" element={
+            <PrivateRoute>
+              <Analytics />
+            </PrivateRoute>
+          } />
+
+          <Route path="/categories" element={
+            <PrivateRoute>
+              <Categories />
+            </PrivateRoute>
+          } />
+          
+          <Route path="/profile" element={
+            <PrivateRoute>
+              <Profile />
+            </PrivateRoute>
+          } />
+
+          <Route path="/edit-profile" element={
+            <PrivateRoute>
+              <EditProfile />
+            </PrivateRoute>
+          } />
         </Routes>
       </MainLayout>
     </Router>
