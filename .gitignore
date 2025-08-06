@@ -140,3 +140,6 @@ vite.config.ts.timestamp-*
 
 #upload files
 server/uploads/
+
+#firebase json
+firebaseServiceAccountKey.json
