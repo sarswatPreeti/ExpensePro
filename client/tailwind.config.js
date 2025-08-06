@@ -1,4 +1,5 @@
 export const content = ["./src/**/*.{js,jsx,ts,tsx,html}"];
+export const darkMode = "class";
 export const theme = {
   extend: {
     animation: {
@@ -29,6 +30,9 @@ export const theme = {
         '0%, 100%': { transform: 'translateX(0)' },
         '25%': { transform: 'translateX(-5px)' },
         '75%': { transform: 'translateX(5px)' },
+      },
+      transitionProperty: {
+        'colors': 'background-color, border-color, color, fill, stroke',
       },
     },
   },
