@@ -15,7 +15,13 @@ import {
   FaPlus,
   FaEye,
   FaTrash,
+  FaGooglePay,
+  FaCreditCard,
+  FaRegCreditCard
 } from "react-icons/fa";
+import { BsCashCoin } from "react-icons/bs";
+import { CgOptions } from "react-icons/cg";
+import { SiPhonepe, SiPaytm } from "react-icons/si";
 
 // Define API endpoints using environment variable or fallback to localhost
 const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
@@ -44,6 +50,8 @@ const AddExpense = () => {
     amount: "",
     date: "",
     category: DEFAULT_CATEGORIES[0].name,
+    paymentMethod: "Cash",
+    cardLast4: "", // ✅ NEW
     description: "",
     invoice: null,
   });
@@ -53,6 +61,15 @@ const AddExpense = () => {
 
   //Holds the current list of categories available for selection.
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+
+  const PAYMENT_METHODS = [
+    { name: "Cash", icon: <BsCashCoin /> },
+    { name: "Paytm", icon: <SiPaytm /> },
+    { name: "Debit Card", icon: <FaRegCreditCard /> },
+    { name: "GPay", icon: <FaGooglePay /> },
+    { name: "PhonePe", icon: <SiPhonepe /> },
+    { name: "Credit Card", icon: <FaCreditCard /> },
+  ];
 
   // Fetch and merge user-defined categories with defaults on component mount
   useEffect(() => {
@@ -96,6 +113,12 @@ const AddExpense = () => {
       formData.append("amount", form.amount);
       formData.append("date", form.date);
       formData.append("category", form.category);
+      formData.append("paymentMethod", form.paymentMethod);
+
+      // Only append cardLast4 if method is Card
+if ((form.paymentMethod === "Credit Card" || form.paymentMethod === "Debit Card") && form.cardLast4) {
+  formData.append("cardLast4", form.cardLast4);
+}
       formData.append("description", form.description);
 
       // Append invoice file if it exists
@@ -115,6 +138,8 @@ const AddExpense = () => {
         amount: "",
         date: "",
         category: categories[0]?.name || "", // Reset to first available category
+        paymentMethod: "Cash",
+        cardLast4: "", // ✅ NEW
         description: "",
         invoice: null,
       });
@@ -229,6 +254,71 @@ const AddExpense = () => {
                   </select>
                 </div>
               </div>
+
+
+              {/* Payment Method Radio Button Group */}
+              <div className="animate-fade-in-up animation-delay-350">
+                <label className="text-gray-600 block mb-1 font-medium">Payment Method</label>
+                <div className="w-full border border-b-2 border-indigo-300 px-4 py-3 bg-transparent focus-within:border-indigo-500 transition ">
+                  <div className="flex flex-wrap justify-evenly gap-3">
+                    {PAYMENT_METHODS.map((methodObj) => {
+                      const isSelected = form.paymentMethod === methodObj.name;
+                      return (
+                        <label
+                          key={methodObj.name}
+                          className={`cursor-pointer px-4 py-2 border text-sm transition-all flex items-center gap-1 rounded-lg
+                            ${isSelected
+                              ? "bg-indigo-500 text-white border-indigo-500 shadow-sm"
+                              : "bg-white text-gray-600 border-gray-300 hover:bg-indigo-100"
+                            }`}
+                        >
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value={methodObj.name}
+                            checked={isSelected}
+                            onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
+                            className="hidden"
+                          />
+                          {/* Icon with dynamic color */}
+                          {methodObj.icon &&
+                            React.cloneElement(methodObj.icon, {
+                              className: `inline-block mr-1 text-md ${isSelected ? "text-white" : "text-indigo-500"}`,
+                            })}
+                          {methodObj.name}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+
+              {/* Show Card Last 4 Digits only if payment method is 'Card' */}
+              {(form.paymentMethod === "Credit Card" || form.paymentMethod === "Debit Card") && (
+                <div className="animate-fade-in-up animation-delay-400">
+                  <label className="text-gray-600 block mb-1 font-medium">Last 4 Digits of Card</label>
+                  <input
+                    type="text"
+                    maxLength={4}
+                    pattern="\d{4}"
+                    inputMode="numeric"
+                    placeholder="e.g., 1234"
+                    value={form.cardLast4}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        cardLast4: e.target.value.replace(/\D/g, "").slice(0, 4),
+                      })
+                    }
+                    className="w-full pl-4 pr-4 py-3 border-b-2 border-indigo-300 bg-transparent focus:outline-none focus:border-indigo-500 transition"
+                    required
+                  />
+                  <p className="text-sm text-gray-500 mt-1">Only numbers allowed</p>
+                </div>
+              )}
+
+
 
               {/* Description textarea*/}
               <div className="animate-fade-in-up animation-delay-400">
