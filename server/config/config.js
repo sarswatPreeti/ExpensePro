@@ -1,25 +1,58 @@
-require('dotenv').config();
+// require('dotenv').config();
+
+// module.exports = {
+//   development: {
+//     username: process.env.DB_USER,
+//     password: process.env.DB_PASS,
+//     database: process.env.DB_NAME,
+//     host: process.env.DB_HOST,
+//     dialect: 'postgres',
+//   },
+//   test: {
+//     username: process.env.DB_USER,
+//     password: process.env.DB_PASS,
+//     database: process.env.DB_NAME,
+//     host: process.env.DB_HOST,
+//     dialect: 'postgres',
+//   },
+//   production: {
+//     username: process.env.DB_USER,
+//     password: process.env.DB_PASS,
+//     database: process.env.DB_NAME,
+//     host: process.env.DB_HOST,
+//     dialect: 'postgres',
+//   },
+// };
+
+
+require("dotenv").config();
+
+const commonConfig = {
+  dialect: "postgres",
+  host: process.env.DB_HOST,
+  username: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  logging: false, // Disable logging by default
+};
 
 module.exports = {
   development: {
-    username: process.env.DB_USER,
-    password: process.env.DB_PASS,
+    ...commonConfig,
     database: process.env.DB_NAME,
-    host: process.env.DB_HOST,
-    dialect: 'postgres',
+    logging: console.log, // Enable verbose logging only in dev
   },
   test: {
-    username: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME,
-    host: process.env.DB_HOST,
-    dialect: 'postgres',
+    ...commonConfig,
+    database: process.env.TEST_DB_NAME || process.env.DB_NAME,
   },
   production: {
-    username: process.env.DB_USER,
-    password: process.env.DB_PASS,
+    ...commonConfig,
     database: process.env.DB_NAME,
-    host: process.env.DB_HOST,
-    dialect: 'postgres',
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false, // Use with Heroku-like environments
+      },
+    },
   },
 };
