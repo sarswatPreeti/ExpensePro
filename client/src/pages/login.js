@@ -8,7 +8,7 @@ import {
   sendEmailVerification,
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import axios from "../axiosInstance";
+import axios from "../api/axiosInstance";
 import { app } from "../services/firebase"; // Firebase app config
 import { Eye, EyeOff, Loader2, Mail, Lock, LogIn} from "lucide-react";
 
