@@ -330,7 +330,7 @@ import React, { useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
-import axios from "../axiosInstance";
+import axios from "../api/axiosInstance";
 import "react-toastify/dist/ReactToastify.css";
 import {
   FaMoon,
