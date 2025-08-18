@@ -8,7 +8,7 @@ import {
   sendEmailVerification,
 } from "firebase/auth";
 import { app } from "../services/firebase";
-import axios from "../axiosInstance";
+import axios from "../api/axiosInstance";
 import {Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
