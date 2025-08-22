@@ -1,220 +1,185 @@
-// const { Expense } = require("../models");
-// const fs = require("fs");
-// const path = require("path");
-
-// {/*Create a new expense with optional invoice upload support*/}
-// const addExpense = async (req, res) => {
-//   try {
-//     const { title, amount, category, description, date } = req.body;
-
-//     // Check if required fields are missing and return error if so
-//     if (!title || !amount || !category || !date) {
-//       return res.status(400).json({ error: "Missing required fields" });
-//     }
-
-//     let invoicePath = null;
-
-//     if (req.file) {
-//       // Define invoice directory
-//       const invoiceDir = path.join(__dirname, "..", "uploads/invoices");
-
-//       // Create directory if not exists
-//       if (!fs.existsSync(invoiceDir)) {
-//         fs.mkdirSync(invoiceDir, { recursive: true });
-//       }
-
-//       // Generate unique file name
-//       const ext = path.extname(req.file.originalname);
-//       const filename = `invoice-${Date.now()}${ext}`;
-//       const fullPath = path.join(invoiceDir, filename);
-
-//       // Save file from memory to disk
-//       fs.writeFileSync(fullPath, req.file.buffer);
-
-//       // Save relative path to DB
-//       invoicePath = `uploads/invoices/${filename}`;
-//     }
-
-//     // Create expense with invoice path (if any)
-//     const expense = await Expense.create({
-//       title,
-//       amount,
-//       category,
-//       description,
-//       date,
-//       invoice: invoicePath,
-//     });
-
-//     res.status(201).json({ success: true, data: expense });
-//   } catch (error) {
-//     console.error("Error adding expense:", error);
-//     res.status(500).json({ success: false, error: "Server error" });
-//   }
-// };
-
-// module.exports = { addExpense };
-
-
 const { Expense, Category } = require("../models");
-const fs = require("fs");
 const path = require("path");
+const fs = require("fs");
 
-// Save invoice file
-const saveInvoiceFile = async (file) => {
-  const invoiceDir = path.join(__dirname, "..", "uploads/invoices");
-  await fs.promises.mkdir(invoiceDir, { recursive: true });
+const INVOICE_DIR = path.resolve(process.cwd(), "uploads", "invoices");
 
-  const ext = path.extname(file.originalname);
-  const filename = `invoice-${Date.now()}${ext}`;
-  const fullPath = path.join(invoiceDir, filename);
-
-  await fs.promises.writeFile(fullPath, file.buffer);
-  return `uploads/invoices/${filename}`;
-};
-
+// Create expense
 exports.createExpense = async (req, res) => {
   try {
-    const { title, amount, description, date, category } = req.body;
+    let { title, amount, date, category: categoryName, paymentMethod, cardLast4, description } = req.body;
+    const userId = req.user.id;
 
-    if (!title || !amount || !date || !category) {
-      return res.status(400).json({ error: "Missing required fields" });
+    if (!title || !amount || !date || !categoryName) {
+      return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const foundCategory = await Category.findOne({
-      where: { name: category, userId: req.user.id },
+    // Normalize category name
+    categoryName = categoryName.trim().toLowerCase();
+
+    const parsedAmount = parseFloat(amount);
+    if (!Number.isFinite(parsedAmount) || parsedAmount < 0) {
+      return res.status(400).json({ message: "Invalid amount" });
+    }
+
+    // Validate card payments
+    if ((paymentMethod === "Credit Card" || paymentMethod === "Debit Card") &&
+        (!cardLast4 || !/^\d{4}$/.test(cardLast4))) {
+      return res.status(400).json({ message: "cardLast4 must be 4 digits for card payments" });
+    }
+
+    const [category] = await Category.findOrCreate({
+      where: { name: categoryName, userId },
+      defaults: { name: categoryName, userId },
     });
 
-    if (!foundCategory) {
-      return res.status(400).json({ error: "Invalid category" });
-    }
-
-    let invoicePath = null;
-    if (req.file) {
-      invoicePath = await saveInvoiceFile(req.file);
-    }
+    let invoiceFilename = req.file ? req.file.filename : null;
 
     const expense = await Expense.create({
       title,
-      amount,
-      description,
+      amount: parsedAmount,
       date,
-      invoice: invoicePath,
-      userId: req.user.id,
-      categoryId: foundCategory.id,
+      categoryId: category.id,
+      paymentMethod: paymentMethod || "Cash",
+      cardLast4: cardLast4 || null,
+      description,
+      invoice: invoiceFilename,
+      userId,
     });
 
-    res.status(201).json({ success: true, data: expense });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    return res.status(201).json(expense);
+
+  } catch (error) {
+    console.error("Error creating expense:", error);
+    return res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
 
-exports.getAllExpenses = async (req, res) => {
+// Get all expenses
+exports.getExpenses = async (req, res) => {
   try {
-    const expenses = await Expense.findAll({ where: { userId: req.user.id } });
-    res.status(200).json({ success: true, data: expenses });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    const expenses = await Expense.findAll({
+      where: { userId: req.user.id },
+      include: [{ model: Category, as: "category", attributes: ["id", "name"] }],
+      order: [["date", "DESC"]],
+    });
+    return res.status(200).json(expenses);
+  } catch (error) {
+    console.error("Error fetching expenses:", error);
+    return res.status(500).json({ message: "Failed to fetch expenses", error: error.message });
   }
 };
 
-exports.getExpense = async (req, res) => {
+// Get single expense
+exports.getExpenseById = async (req, res) => {
   try {
     const expense = await Expense.findOne({
       where: { id: req.params.id, userId: req.user.id },
+      include: [{ model: Category, as: "category", attributes: ["id", "name"] }],
     });
 
-    if (!expense) {
-      return res.status(404).json({ error: "Expense not found" });
-    }
-
-    res.status(200).json({ success: true, data: expense });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    if (!expense) return res.status(404).json({ message: "Expense not found" });
+    return res.status(200).json(expense);
+  } catch (error) {
+    console.error("Error fetching expense:", error);
+    return res.status(500).json({ message: "Failed to fetch expense", error: error.message });
   }
 };
 
+// Update expense
 exports.updateExpense = async (req, res) => {
   try {
-    const { title, amount, description, date, category } = req.body;
+    let { amount, description, date, categoryId, paymentMethod, cardLast4 } = req.body;
 
     const expense = await Expense.findOne({
       where: { id: req.params.id, userId: req.user.id },
     });
+    if (!expense) return res.status(404).json({ message: "Expense not found" });
 
-    if (!expense) return res.status(404).json({ error: "Expense not found" });
-
-    const foundCategory = await Category.findOne({
-      where: { name: category, userId: req.user.id },
-    });
-
-    if (!foundCategory) return res.status(400).json({ error: "Invalid category" });
-
-    if (req.file) {
-      // Delete old invoice
-      if (expense.invoice) {
-        const oldPath = path.join(__dirname, "..", expense.invoice);
-        if (fs.existsSync(oldPath)) {
-          await fs.promises.unlink(oldPath);
-        }
-      }
-      expense.invoice = await saveInvoiceFile(req.file);
+    if (categoryId) {
+      const category = await Category.findOne({
+        where: { id: categoryId, userId: req.user.id },
+      });
+      if (!category) return res.status(400).json({ message: "Invalid category" });
     }
 
-    Object.assign(expense, {
-      title,
-      amount,
-      description,
-      date,
-      categoryId: foundCategory.id,
-    });
+    // Validate card payments
+    if ((paymentMethod === "Credit Card" || paymentMethod === "Debit Card") &&
+        (!cardLast4 || !/^\d{4}$/.test(cardLast4))) {
+      return res.status(400).json({ message: "cardLast4 must be 4 digits for card payments" });
+    }
+
+    if (req.file) {
+      if (expense.invoice) {
+        const oldPath = path.join(INVOICE_DIR, expense.invoice);
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+      expense.invoice = req.file.filename;
+    }
+
+    expense.amount = amount || expense.amount;
+    expense.description = description || expense.description;
+    expense.date = date || expense.date;
+    expense.categoryId = categoryId || expense.categoryId;
+    expense.paymentMethod = paymentMethod || expense.paymentMethod;
+    expense.cardLast4 = cardLast4 || expense.cardLast4;
 
     await expense.save();
-    res.status(200).json({ success: true, data: expense });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    return res.status(200).json(expense);
+  } catch (error) {
+    console.error("Error updating expense:", error);
+    return res.status(500).json({ message: "Failed to update expense", error: error.message });
   }
 };
 
+// Delete expense
 exports.deleteExpense = async (req, res) => {
   try {
+    console.log("Delete expense request received for ID:", req.params.id);
+    console.log("User ID:", req.user.id);
+    
     const expense = await Expense.findOne({
       where: { id: req.params.id, userId: req.user.id },
     });
-
-    if (!expense) return res.status(404).json({ error: "Expense not found" });
+    
+    console.log("Found expense:", expense ? "Yes" : "No");
+    
+    if (!expense) {
+      console.log("Expense not found or doesn't belong to user");
+      return res.status(404).json({ message: "Expense not found" });
+    }
 
     if (expense.invoice) {
-      const invoicePath = path.join(__dirname, "..", expense.invoice);
-      if (fs.existsSync(invoicePath)) {
-        await fs.promises.unlink(invoicePath);
+      const filePath = path.join(INVOICE_DIR, expense.invoice);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log("Invoice file deleted:", expense.invoice);
       }
     }
 
     await expense.destroy();
-    res.status(200).json({ success: true, message: "Expense deleted" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    console.log("Expense deleted successfully from database");
+    return res.status(200).json({ message: "Expense deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting expense:", error);
+    return res.status(500).json({ message: "Failed to delete expense", error: error.message });
   }
 };
 
-exports.downloadInvoice = (req, res) => {
-  const filename = req.params.filename;
-  const filePath = path.join(__dirname, "..", "uploads", "invoices", filename);
+// Download invoice
+exports.downloadInvoice = async (req, res) => {
+  try {
+    const expense = await Expense.findOne({
+      where: { id: req.params.id, userId: req.user.id },
+    });
+    if (!expense || !expense.invoice) return res.status(404).json({ message: "Invoice not found" });
 
-  const isSafePath = /^[a-zA-Z0-9\-_.]+\.(pdf|jpg|jpeg|png)$/;
-  if (!isSafePath.test(filename)) {
-    return res.status(400).json({ error: "Invalid file name" });
+    const filePath = path.join(INVOICE_DIR, expense.invoice);
+    if (!fs.existsSync(filePath)) return res.status(404).json({ message: "Invoice file not found" });
+
+    return res.download(filePath, expense.invoice);
+  } catch (error) {
+    console.error("Error downloading invoice:", error);
+    return res.status(500).json({ message: "Failed to download invoice", error: error.message });
   }
-
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ error: "File not found" });
-  }
-
-  res.download(filePath);
 };
