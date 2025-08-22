@@ -6,11 +6,19 @@ const { Category, Expense } = require("../models");
 exports.getAllCategories = async (req, res) => {
   try {
     const categories = await Category.findAll({
-      where: { userId: req.user.uid },
+      where: { userId: req.user.id },
+      include: [
+        {
+          model: Expense,
+          as: "expenses",
+          attributes: ["id", "title", "amount", "date", "description"],
+        },
+      ],
       order: [["createdAt", "DESC"]],
     });
     res.json(categories);
   } catch (err) {
+    console.error("Error fetching categories:", err);
     res.status(500).json({ message: "Failed to fetch categories." });
   }
 };
@@ -25,7 +33,7 @@ exports.addCategory = async (req, res) => {
 
   try {
     const existing = await Category.findOne({
-      where: { name, userId: req.user.uid },
+      where: { name, userId: req.user.id },
     });
 
     if (existing) {
@@ -34,7 +42,7 @@ exports.addCategory = async (req, res) => {
 
     const newCategory = await Category.create({
       name,
-      userId: req.user.uid,
+      userId: req.user.id,
     });
 
     res.status(201).json({ message: "Category added successfully.", category: newCategory });
@@ -49,7 +57,7 @@ exports.deleteCategory = async (req, res) => {
 
   try {
     const category = await Category.findOne({
-      where: { id: categoryId, userId: req.user.uid },
+      where: { id: categoryId, userId: req.user.id },
     });
 
     if (!category) {
@@ -57,7 +65,7 @@ exports.deleteCategory = async (req, res) => {
     }
 
     const usedInExpense = await Expense.findOne({
-      where: { categoryId, userId: req.user.uid },
+      where: { categoryId, userId: req.user.id },
     });
 
     if (usedInExpense) {
