@@ -9,7 +9,7 @@ const sequelize = new Sequelize({
   password: process.env.DB_PASS,
   host: process.env.DB_HOST,
   dialect: "postgres",
-  logging: isProduction ? false : console.log, // Optional: logs only in dev
+  logging: false, // Optional: logs only in dev
   dialectOptions: isProduction
     ? {
         ssl: {
