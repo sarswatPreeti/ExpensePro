@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../contexts/authContext';
+import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from './loadingSpinner';
 
 const AuthGuard = ({ children, requireAuth = true, redirectTo = "/login" }) => {
