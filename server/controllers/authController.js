@@ -28,10 +28,16 @@ exports.verifyFirebaseTokenAndIssueJWT = async (req, res) => {
       return res.status(403).json({ message: "Email not verified. Please verify your email before logging in." });
     }
 
-    // 🔍 Find user in DB using firebaseUid
+    // 🔍 Find user in DB using firebaseUid; if not found, create implicitly on login
     let user = await User.findOne({ where: { firebaseUid: uid } });
-    // ❌ Return error if user not found
-    if (!user) return res.status(401).json({ message: "User not found" });
+    if (!user) {
+      user = await User.create({
+        firebaseUid: uid,
+        email: email || `${uid}@example.com`,
+        name: name || email || uid,
+        profileImage: picture || null,
+      });
+    }
 
     // ✅ Issue backend JWT
     const token = generateToken(user.id);
