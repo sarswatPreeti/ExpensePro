@@ -4,7 +4,7 @@ import axiosInstance from "./axiosInstance";
 // -------- AUTH --------
 export const signupUser = (data) => axiosInstance.post("/auth/signup", data);
 export const loginUser = (data) => axiosInstance.post("/auth/login", data);
-export const getProfile = () => axiosInstance.get("/auth/profile");
+export const getProfile = () => axiosInstance.get("/profile");
 
 // -------- EXPENSES --------
 export const getExpenses = () => axiosInstance.get("/expenses");
@@ -27,6 +27,6 @@ export const deleteExpense = (id) =>
 // -------- CATEGORIES --------
 export const getCategories = () => axiosInstance.get("/categories");
 export const createCategory = (data) =>
-  axiosInstance.post("/categories", data);
+  axiosInstance.post("/categories/add", data);
 export const deleteCategory = (id) =>
   axiosInstance.delete(`/categories/${id}`);
