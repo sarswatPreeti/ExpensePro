@@ -24,7 +24,7 @@ exports.getProfile = async (req, res) => {
       id: user.id,
       name: user.name,
       email: user.email,
-      imageUrl: user.imageUrl || null,
+      imageUrl: user.profileImage || null,
       createdAt: user.createdAt,
     });
   } catch (err) {
