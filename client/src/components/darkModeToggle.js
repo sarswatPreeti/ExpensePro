@@ -20,10 +20,14 @@ const DarkModeToggle = () => {
   return (
     <button
       onClick={() => setDarkMode(!darkMode)}
-      className="absolute top-6 right-6 p-2 rounded-full shadow-md bg-white dark:bg-gray-700 transition"
+      className="absolute top-6 right-6 p-3 rounded-full shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all duration-300 hover:scale-110"
       title="Toggle Theme"
     >
-      {darkMode ? <FaSun className="text-yellow-400" /> : <FaMoon className="text-gray-800" />}
+      {darkMode ? (
+        <FaSun className="text-yellow-500 dark:text-yellow-400 text-lg transition-all duration-300" />
+      ) : (
+        <FaMoon className="text-gray-700 dark:text-gray-300 text-lg transition-all duration-300" />
+      )}
     </button>
   );
 };
