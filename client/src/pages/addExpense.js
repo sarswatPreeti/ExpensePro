@@ -1,36 +1,14 @@
-// Import core React features: useEffect (lifecycle), useState (state), useRef (DOM references)
 import React, { useEffect, useState, useRef } from "react";
-
-// Import Axios for making HTTP requests to the backend
-import axios from "axios";
-
-// Import React icons
+import { getCategories, createExpense } from "../api/api";
+import { useAuth } from "../contexts/AuthContext";
 import {
-  FaRupeeSign,
-  FaCalendarAlt,
-  FaTags,
-  FaPen,
-  FaCheckCircle,
-  FaTimesCircle,
-  FaPlus,
-  FaEye,
-  FaTrash,
-  FaGooglePay,
-  FaCreditCard,
-  FaRegCreditCard
+  FaRupeeSign, FaCalendarAlt, FaTags, FaPen, FaCheckCircle, FaTimesCircle, FaPlus, FaEye, FaTrash,
+  FaGooglePay, FaCreditCard, FaRegCreditCard
 } from "react-icons/fa";
 import { BsCashCoin } from "react-icons/bs";
-import { CgOptions } from "react-icons/cg";
 import { SiPhonepe, SiPaytm } from "react-icons/si";
 
-// Define API endpoints using environment variable or fallback to localhost
-const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:4000";
-// Endpoint to add a new expense
-const EXPENSE_API = `${BASE_URL}/api/expenses/add`;
-// Endpoint to fetch categories (default + user-defined)
-const CATEGORY_API = `${BASE_URL}/api/categories`;
-
-//Default Categories given to user
+// Default Categories
 const DEFAULT_CATEGORIES = [
   { id: "default-1", name: "Food" },
   { id: "default-2", name: "Transport" },
@@ -41,25 +19,20 @@ const DEFAULT_CATEGORIES = [
   { id: "default-7", name: "Others" },
 ];
 
-
 const AddExpense = () => {
-
-  //Intialize a Form state using useState Hook
+  const { isAuthenticated } = useAuth();
   const [form, setForm] = useState({
     title: "",
     amount: "",
     date: "",
     category: DEFAULT_CATEGORIES[0].name,
     paymentMethod: "Cash",
-    cardLast4: "", // ✅ NEW
+    cardLast4: "",
     description: "",
     invoice: null,
   });
 
-  //Used to track the status of some process
   const [status, setStatus] = useState(null);
-
-  //Holds the current list of categories available for selection.
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
 
   const PAYMENT_METHODS = [
@@ -71,183 +44,135 @@ const AddExpense = () => {
     { name: "Credit Card", icon: <FaCreditCard /> },
   ];
 
-  // Fetch and merge user-defined categories with defaults on component mount
+  const fileInputRef = useRef(null);
+
+  // Fetch user categories and merge with defaults
   useEffect(() => {
     const fetchCategories = async () => {
+      if (!isAuthenticated()) return;
+      
       try {
-        const res = await axios.get(CATEGORY_API);
-        const userCategories = res.data;
-
-        // Merge default and user-defined categories
+        const response = await getCategories();
+        const userCategories = response.data;
         const merged = [...DEFAULT_CATEGORIES];
-
         userCategories.forEach((cat) => {
           if (!merged.find((c) => c.name.toLowerCase() === cat.name.toLowerCase())) {
             merged.push(cat);
           }
         });
-
         setCategories(merged);
-
-        // Set default selected category
         setForm((prev) => ({ ...prev, category: merged[0]?.name || "" }));
       } catch (err) {
-        console.error("Failed to fetch user categories", err);
-        // Fallback to default categories if fetch fails
+        console.error("Failed to fetch categories", err);
         setCategories(DEFAULT_CATEGORIES);
       }
     };
-
     fetchCategories();
-  }, []);
+  }, [isAuthenticated]);
 
-  // Handle form submission: send expense data (with optional invoice) to backend
+  // Submit handler
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Prevent default form submission behavior
+    e.preventDefault();
+    
+    if (!isAuthenticated()) {
+      setStatus("error");
+      return;
+    }
 
     try {
-      const formData = new FormData(); // Create a FormData object to handle file upload
-
-      // Append form fields to FormData
+      const formData = new FormData();
       formData.append("title", form.title);
       formData.append("amount", form.amount);
       formData.append("date", form.date);
-      formData.append("category", form.category);
+      formData.append("category", form.category); // sending name
       formData.append("paymentMethod", form.paymentMethod);
-
-      // Only append cardLast4 if method is Card
-if ((form.paymentMethod === "Credit Card" || form.paymentMethod === "Debit Card") && form.cardLast4) {
-  formData.append("cardLast4", form.cardLast4);
-}
-      formData.append("description", form.description);
-
-      // Append invoice file if it exists
-      if (form.invoice) {
-        formData.append("invoice", form.invoice);
+      if ((form.paymentMethod === "Credit Card" || form.paymentMethod === "Debit Card") && form.cardLast4) {
+        formData.append("cardLast4", form.cardLast4);
       }
+      formData.append("description", form.description);
+      if (form.invoice) formData.append("invoice", form.invoice);
 
-      // Send the form data to the backend API
-      await axios.post(EXPENSE_API, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await createExpense(formData);
 
-      // On successful submission, show success status and reset form fields
       setStatus("success");
       setForm({
         title: "",
         amount: "",
         date: "",
-        category: categories[0]?.name || "", // Reset to first available category
+        category: categories[0]?.name || "",
         paymentMethod: "Cash",
-        cardLast4: "", // ✅ NEW
+        cardLast4: "",
         description: "",
         invoice: null,
       });
     } catch (error) {
-      // On error, show error status and log the error
+      console.error("Error adding expense:", error);
       setStatus("error");
-      console.error(error);
     }
-
-    // Clear the status message after 3 seconds
     setTimeout(() => setStatus(null), 3000);
   };
 
-  // Ref for accessing and triggering the hidden file input programmatically
-  const fileInputRef = useRef(null);
-
-  /*
-    Add Expense Page UI:
-    - Full-screen, centered layout with gradient background and card-style container.
-    - Displays success or error message based on form submission status.
-    - Form includes inputs for:
-      - Title (text)
-      - Amount (number)
-      - Date (date picker)
-      - Category (dropdown from available categories)
-      - Description (textarea for optional notes)
-    - Right section allows uploading an invoice (PDF/image):
-      - If not uploaded: shows "+" button to trigger file picker.
-      - If uploaded: previews image or embedded PDF.
-      - Provides options to view in new tab or delete the file.
-    - Uses Tailwind CSS classes for styling and animation effects.
-    - Submit button sends form data to the backend via `handleSubmit`.
-  */
-
   return (
-    // Full-screen container with a gradient background and centered content
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-blue-100 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-blue-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4 py-12 transition-all duration-300">
+      <div className="w-full max-w-5xl bg-white/90 dark:bg-gray-800/95 backdrop-blur-md shadow-2xl rounded-3xl p-10 border border-gray-200 dark:border-gray-800 transition-all duration-300 animate-fade-in">
 
-      {/* Main card container */}
-      <div className="w-full max-w-5xl bg-white/80 backdrop-blur-md shadow-2xl rounded-3xl p-10 border border-gray-200 animate-fade-in">
-
-        {/* Header */}
-        <h2 className="text-4xl font-bold text-gray-800 mb-10 text-center flex items-center justify-center gap-3 animate-fade-in-down">
-          <FaPen className="text-indigo-600" />
+        <h2 className="text-4xl font-bold text-gray-800 dark:text-gray-100 mb-10 text-center flex items-center justify-center gap-3 transition-all duration-300 animate-fade-in-down">
+          <FaPen className="text-indigo-600 dark:text-indigo-400 transition-all duration-300" />
           Add New Expense
         </h2>
 
-        {/* Status messages */}
         {status === "success" && (
-          <div className="mb-6 text-green-600 flex items-center justify-center gap-2 animate-bounce-in">
+          <div className="mb-6 text-green-600 dark:text-green-400 flex items-center justify-center gap-2 transition-all duration-300 animate-bounce-in">
             <FaCheckCircle className="text-lg" />
             <span>Expense added successfully!</span>
           </div>
         )}
         {status === "error" && (
-          <div className="mb-6 text-red-600 flex items-center justify-center gap-2 animate-shake">
+          <div className="mb-6 text-red-600 dark:text-red-400 flex items-center justify-center gap-2 transition-all duration-300 animate-shake">
             <FaTimesCircle className="text-lg" />
             <span>Failed to add expense.</span>
           </div>
         )}
 
-        {/* Form starts here */}
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 transition-all duration-300">
+            {/* Left Column */}
+            <div className="space-y-6 border border-indigo-300 dark:border-indigo-400 rounded-2xl p-6 bg-white/50 dark:bg-gray-800/95 transition-all duration-300 hover:shadow-xl hover:scale-[1.01] hover:border-indigo-500 dark:hover:border-indigo-300 h-full shadow-inner animate-fade-in-up animation-delay-500">
 
-            {/* Left Column: Form Fields */}
-            <div className="space-y-6 border border-indigo-300 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:scale-[1.01] hover:border-indigo-500 h-full shadow-inner animate-fade-in-up animation-delay-500">
-
-              {/* Map over fields to render Title, Amount, and Date */}
+              {/* Title, Amount, Date */}
               {[
-                { label: 'Title', icon: <FaPen />, type: 'text', key: 'title', placeholder: 'e.g., Grocery' },
-                { label: 'Amount', icon: <FaRupeeSign />, type: 'number', key: 'amount', placeholder: 'e.g., 500' },
+                { label: 'Title', icon: <FaPen />, type: 'text', key: 'title', placeholder: 'Grocery' },
+                { label: 'Amount', icon: <FaRupeeSign />, type: 'number', key: 'amount', placeholder: '500' },
                 { label: 'Date', icon: <FaCalendarAlt />, type: 'date', key: 'date' },
               ].map((field, idx) => (
-                <div 
-                key={field.key} 
-                className={`animate-fade-in-up animation-delay-${idx * 100}`}
-                >
-                  <label className="text-gray-600 block mb-1 font-medium">{field.label}</label>
+                <div key={field.key} className={`animate-fade-in-up animation-delay-${idx * 100}`}>
+                  <label className="text-gray-600 dark:text-gray-300 block mb-1 transition-all duration-300">{field.label}</label>
                   <div className="relative">
-
-                    {/* Icon inside input field */}
-                    {React.cloneElement(field.icon, { className: 'absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500' })}
+                    {React.cloneElement(field.icon, { className: 'absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 dark:text-indigo-400 transition-all duration-300' })}
                     <input
                       type={field.type}
                       placeholder={field.placeholder || ''}
                       value={form[field.key]}
                       onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
-                      maxLength={field.key === "title" ? 100 : undefined} // Limit title to 100 chars
-                      className="w-full pl-10 pr-4 py-3 border-b-2 border-indigo-300 bg-transparent focus:outline-none focus:border-indigo-500 transition"
+                      className="w-full pl-10 pr-4 py-3 border-b-2 border-indigo-300 dark:border-indigo-400 bg-transparent focus:outline-none focus:border-indigo-600 dark:focus:border-indigo-300 text-gray-800 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-300 rounded-xl"
                       required
                     />
                   </div>
                 </div>
               ))}
 
-              {/* Category Dropdown*/}
+              {/* Category */}
               <div className="animate-fade-in-up animation-delay-300">
-                <label className="text-gray-600 block mb-1 font-medium">Category</label>
+                <label className="text-gray-600 dark:text-gray-300 block mb-1 transition-all duration-300">Category</label>
                 <div className="relative">
-                  <FaTags className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500" />
+                  <FaTags className="absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500 dark:text-indigo-400 transition-all duration-300" />
                   <select
                     value={form.category}
                     onChange={(e) => setForm({ ...form, category: e.target.value })}
-                    className="w-full pl-10 pr-4 py-3 border-b-2 border-indigo-300 bg-transparent focus:outline-none focus:border-indigo-500 text-gray-800"
+                    className="w-full pl-10 pr-4 py-3 border-b-2 border-indigo-300 dark:border-indigo-400 bg-transparent focus:outline-none focus:border-indigo-600 dark:focus:border-indigo-300 text-gray-800 dark:text-gray-100 transition-all duration-300 rounded-xl"
                   >
                     {categories.map((cat) => (
-                      <option key={cat.id || cat.name} value={cat.name}>
+                      <option key={cat.id || cat.name} value={cat.name} className="text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-800">
                         {cat.name}
                       </option>
                     ))}
@@ -255,37 +180,37 @@ if ((form.paymentMethod === "Credit Card" || form.paymentMethod === "Debit Card"
                 </div>
               </div>
 
-
-              {/* Payment Method Radio Button Group */}
-              <div className="animate-fade-in-up animation-delay-350">
-                <label className="text-gray-600 block mb-1 font-medium">Payment Method</label>
-                <div className="w-full border border-b-2 border-indigo-300 px-4 py-3 bg-transparent focus-within:border-indigo-500 transition ">
-                  <div className="flex flex-wrap justify-evenly gap-3">
-                    {PAYMENT_METHODS.map((methodObj) => {
-                      const isSelected = form.paymentMethod === methodObj.name;
+              {/* Payment Method */}
+              <div className="animate-fade-in-up animation-delay-300">
+                <label className="text-gray-600 dark:text-gray-300 block mb-1 transition-all duration-300">Payment Method</label>
+                <div className="w-full border border-b-2 border-indigo-300 dark:border-indigo-400 px-4 py-3 bg-transparent focus-within:border-indigo-500 dark:focus-within:border-indigo-300 transition rounded-xl">
+                  <div className="flex flex-wrap gap-3">
+                    {PAYMENT_METHODS.map((method) => {
+                      const isSelected = form.paymentMethod === method.name;
                       return (
                         <label
-                          key={methodObj.name}
-                          className={`cursor-pointer px-4 py-2 border text-sm transition-all flex items-center gap-1 rounded-lg
-                            ${isSelected
-                              ? "bg-indigo-500 text-white border-indigo-500 shadow-sm"
-                              : "bg-white text-gray-600 border-gray-300 hover:bg-indigo-100"
-                            }`}
+                          key={method.name}
+                          className={`cursor-pointer px-4 py-2 border rounded-lg transition-all duration-300 hover:scale-105 ${
+                            isSelected
+                              ? 'bg-indigo-500 dark:bg-indigo-400 text-white border-indigo-500 dark:border-indigo-300 shadow-md'
+                              : 'bg-white dark:bg-gray-800/95 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-indigo-300 dark:hover:border-indigo-400'
+                          }`}
                         >
                           <input
                             type="radio"
                             name="paymentMethod"
-                            value={methodObj.name}
+                            value={method.name}
                             checked={isSelected}
                             onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
                             className="hidden"
                           />
-                          {/* Icon with dynamic color */}
-                          {methodObj.icon &&
-                            React.cloneElement(methodObj.icon, {
-                              className: `inline-block mr-1 text-md ${isSelected ? "text-white" : "text-indigo-500"}`,
+                          {method.icon &&
+                            React.cloneElement(method.icon, {
+                              className: `inline-block mr-1 transition-all duration-300 ${
+                                isSelected ? 'text-white' : 'text-indigo-500 dark:text-indigo-400'
+                              }`,
                             })}
-                          {methodObj.name}
+                          {method.name}
                         </label>
                       );
                     })}
@@ -293,126 +218,85 @@ if ((form.paymentMethod === "Credit Card" || form.paymentMethod === "Debit Card"
                 </div>
               </div>
 
-
-              {/* Show Card Last 4 Digits only if payment method is 'Card' */}
+              {/* Card Last 4 Digits */}
               {(form.paymentMethod === "Credit Card" || form.paymentMethod === "Debit Card") && (
                 <div className="animate-fade-in-up animation-delay-400">
-                  <label className="text-gray-600 block mb-1 font-medium">Last 4 Digits of Card</label>
+                  <label className="text-gray-600 dark:text-gray-300 block mb-1 transition-all duration-300">Last 4 Digits of Card</label>
                   <input
                     type="text"
                     maxLength={4}
                     pattern="\d{4}"
                     inputMode="numeric"
-                    placeholder="e.g., 1234"
+                    placeholder="1234"
                     value={form.cardLast4}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        cardLast4: e.target.value.replace(/\D/g, "").slice(0, 4),
-                      })
-                    }
-                    className="w-full pl-4 pr-4 py-3 border-b-2 border-indigo-300 bg-transparent focus:outline-none focus:border-indigo-500 transition"
+                    onChange={(e) => setForm({ ...form, cardLast4: e.target.value.replace(/\D/g, "").slice(0, 4) })}
+                    className="w-full pl-4 pr-4 py-3 border-b-2 border-indigo-300 dark:border-indigo-400 bg-transparent focus:outline-none focus:border-indigo-600 dark:focus:border-indigo-300 text-gray-800 dark:text-gray-100 transition-all duration-300 rounded-xl"
                     required
                   />
-                  <p className="text-sm text-gray-500 mt-1">Only numbers allowed</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 transition-all duration-300">Only numbers allowed</p>
                 </div>
               )}
 
-
-
-              {/* Description textarea*/}
+              {/* Description */}
               <div className="animate-fade-in-up animation-delay-400">
-                <label className="text-gray-600 block mb-1 font-medium">Description</label>
+                <label className="text-gray-600 dark:text-gray-300 block mb-1 transition-all duration-300">Description</label>
                 <textarea
-                  placeholder="Optional notes about this expense"
-                  maxLength={255}
+                  placeholder="Optional notes"
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-3 border-b-2 border-indigo-300 bg-transparent outline-none text-gray-800 placeholder-gray-500 resize-none focus:border-indigo-500 transition"
+                  className="w-full px-4 py-3 border-b-2 border-indigo-300 dark:border-indigo-400 bg-transparent outline-none text-gray-800 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:border-indigo-600 dark:focus:border-indigo-300 transition-all duration-300 rounded-xl"
                 />
-                
-                {/* ✅ Character counter for description */}
-                <p className="text-sm text-gray-500 text-right">
-                  {form.description.length}/255 characters
-                </p>
               </div>
             </div>
 
-            {/* Right Column: Invoice Upload Area*/}
-            <div className="relative flex flex-col items-center justify-center text-center bg-white/60 backdrop-blur border border-indigo-300 hover:shadow-xl hover:scale-[1.01] hover:border-indigo-500 transition-all duration-300 rounded-2xl p-8 h-full shadow-inner animate-fade-in-up animation-delay-500">
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">Invoice</h3>
-              <p className="text-gray-500 text-sm mb-4">PDF or Image (JPEG/PNG)</p>
+            {/* Right Column - Invoice */}
+            <div className="relative flex flex-col items-center justify-center text-center border border-indigo-300 dark:border-indigo-400 rounded-2xl p-8 bg-white/50 dark:bg-gray-800/95 transition-all duration-300 hover:shadow-xl hover:scale-[1.01] hover:border-indigo-500 dark:hover:border-indigo-300 h-full shadow-inner animate-fade-in-up animation-delay-500">
+              <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-2 transition-all duration-300">Invoice</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mb-4 transition-all duration-300">PDF or Image</p>
 
-              {/* Upload button when no file is selected */}
-              {!form.invoice && (
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current.click()}
-                  className="flex items-center justify-center w-16 h-16 bg-indigo-200 rounded-full hover:bg-indigo-300 transition">
-                  <FaPlus className="text-indigo-600 text-2xl" />
+              {!form.invoice ? (
+                <button 
+                  type="button" 
+                  onClick={() => fileInputRef.current.click()} 
+                  className="w-16 h-16 bg-indigo-200 dark:bg-indigo-400 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-indigo-300 dark:hover:bg-indigo-500">
+                  <FaPlus className="text-indigo-600 dark:text-indigo-100 text-2xl transition-all duration-300" />
                 </button>
-              )}
-
-              {/* Show file preview and action buttons if file is selected */}
-              {form.invoice && (
+              ) : (
                 <>
-                  <div className="w-full max-h-60 overflow-hidden rounded-lg border border-gray-300 mb-4">
-                    {form.invoice.type.includes('image') ? (
-                      // Image preview
-                      <img
-                        src={URL.createObjectURL(form.invoice)}
-                        alt="Invoice Preview"
-                        className="object-contain max-h-60 mx-auto"
-                      />
+                  <div className="w-full max-h-60 overflow-hidden rounded-lg border border-gray-300 dark:border-gray-600 mb-4 transition-all duration-300 shadow-md">
+                    {form.invoice.type.includes("image") ? (
+                      <img src={URL.createObjectURL(form.invoice)} alt="Invoice Preview" className="object-contain max-h-60 mx-auto transition-all duration-300" />
                     ) : (
-                      // PDF preview
-                      <embed
-                        src={URL.createObjectURL(form.invoice)}
-                        type="application/pdf"
-                        className="w-full h-60"
-                      />
+                      <embed src={URL.createObjectURL(form.invoice)} type="application/pdf" className="w-full h-60 transition-all duration-300" />
                     )}
                   </div>
 
-                  {/* View and Delete buttons */}
-                  <div className="flex gap-4">
+                  <div className="flex justify-center gap-4 mb-2">
                     <button
                       type="button"
-                      onClick={() => window.open(URL.createObjectURL(form.invoice), '_blank')}
-                      className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
-                      <FaEye /> View
+                      onClick={() => window.open(URL.createObjectURL(form.invoice))}
+                      className="px-4 py-2 bg-green-500 dark:bg-green-600 text-white rounded-lg hover:bg-green-600 dark:hover:bg-green-700 transition-all duration-300 hover:scale-105 shadow-md"
+                    >
+                      View
                     </button>
-
                     <button
                       type="button"
                       onClick={() => setForm({ ...form, invoice: null })}
-                      className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
-                      <FaTrash /> Delete
+                      className="px-4 py-2 bg-red-500 dark:bg-red-600 text-white rounded-lg hover:bg-red-600 dark:hover:bg-red-700 transition-all duration-300 hover:scale-105 shadow-md"
+                    >
+                      Delete
                     </button>
                   </div>
                 </>
               )}
 
-              {/* Hidden File Input */}
-              <input
-                type="file"
-                accept="image/*,.pdf"
-                ref={fileInputRef}
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) setForm({ ...form, invoice: file });
-                }}
-                className="hidden"
-              />
+              <input type="file" ref={fileInputRef} accept="image/*,.pdf" onChange={(e) => setForm({ ...form, invoice: e.target.files[0] })} className="hidden" />
             </div>
           </div>
 
-          {/* Submit Button */}
-          <div className="pt-10 text-center animate-fade-in-up animation-delay-600">
-            <button
-              type="submit"
-              className="bg-gradient-to-r from-indigo-500 to-blue-500 text-white font-bold py-3 px-10 rounded-xl shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+          <div className="pt-10 text-center">
+            <button type="submit" className="bg-gradient-to-r from-indigo-500 to-blue-500 dark:from-indigo-400 dark:to-blue-400 text-white font-bold py-3 px-10 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 transform">
               Add Expense
             </button>
           </div>
@@ -420,7 +304,6 @@ if ((form.paymentMethod === "Credit Card" || form.paymentMethod === "Debit Card"
       </div>
     </div>
   );
-
 };
 
 export default AddExpense;
