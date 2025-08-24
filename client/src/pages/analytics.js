@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "../api/axiosInstance";
+import { useAuth } from "../contexts/AuthContext";
 import {
   PieChart,
   Pie,
@@ -23,12 +24,12 @@ import {
 } from "react-icons/fa";
 import { motion } from "framer-motion"; // For animation effects
 
-// API endpoint and chart colors
-const API = "http://localhost:4000/api/expenses";
+// Chart colors
 const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff7f50", "#a1cfff", "#f87171", "#34d399"];
 
 // Main Analytics Component
 const Analytics = () => {
+  const { isAuthenticated } = useAuth();
 
   // States for data, loading, errors, and chart type
   const [expenses, setExpenses] = useState([]);
@@ -39,9 +40,11 @@ const Analytics = () => {
   // Fetch expense data on component mount
   useEffect(() => {
     const fetchExpenses = async () => {
+      if (!isAuthenticated()) return;
+      
       try {
         setLoading(true);
-        const res = await axios.get(API); // Fetch data from API
+        const res = await axiosInstance.get("/expenses"); // Fetch data from API
         setExpenses(res.data); // Store expenses in state
         setError(""); // Clear any previous error
       } catch (err) {
@@ -51,7 +54,7 @@ const Analytics = () => {
       }
     };
     fetchExpenses();
-  }, []);
+  }, [isAuthenticated]);
 
   // Calculate total expense
   const totalExpense = expenses.reduce((sum, e) => sum + e.amount, 0);
@@ -85,9 +88,18 @@ const Analytics = () => {
     amount,
   }));
 
+  // Helper to safely get category name across shapes
+  const getCategoryName = (exp) => {
+    const nameFromObj = exp.category?.name || exp.Category?.name;
+    if (nameFromObj) return nameFromObj;
+    if (typeof exp.category === "string") return exp.category;
+    return "Uncategorized";
+  };
+
   // Group expenses by category for Pie chart
   const categoryStats = expenses.reduce((acc, expense) => {
-    acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+    const categoryName = getCategoryName(expense);
+    acc[categoryName] = (acc[categoryName] || 0) + expense.amount;
     return acc;
   }, {});
 
@@ -113,7 +125,10 @@ const Analytics = () => {
   // Get most frequently used category
   const mostFrequentCategory = (() => {
     const freq = {};
-    for (let e of expenses) freq[e.category] = (freq[e.category] || 0) + 1;
+    for (let e of expenses) {
+      const name = getCategoryName(e);
+      freq[name] = (freq[name] || 0) + 1;
+    }
     return Object.entries(freq).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
   })();
 
@@ -121,14 +136,14 @@ const Analytics = () => {
   const handleExportCSV = () => {
     const rows = [["Title", "Amount", "Date", "Category", "Description"]];
     expenses.forEach((e) => {
-      rows.push([e.title, e.amount, e.date, e.category, e.description || ""]);
+      rows.push([e.title, e.amount, e.date, getCategoryName(e), e.description || ""]);
     });
     const csvContent = rows.map((row) => row.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: "text/csv" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = "expenses.csv";
-    a.click(); // triggers download
+    a.click();
   };
 
   // Show loading message
@@ -164,13 +179,13 @@ const Analytics = () => {
   */
 
   return (
-    <div className="p-6 max-w-6xl mx-auto animate-fade-in">
+    <div className="p-6 max-w-6xl mx-auto bg-gray-50 dark:bg-gray-900 min-h-screen animate-fade-in transition-all duration-300">
       <div className="flex justify-between items-center mb-6">
         {/* Page Title + Export Button */}
-        <h2 className="text-3xl font-bold text-gray-800">📊 Analytics</h2>
+        <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100">📊 Analytics</h2>
         <button
           onClick={handleExportCSV}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 font-semibold rounded-md shadow hover:bg-blue-200 transition duration-300 hover:scale-105"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-semibold rounded-md shadow hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-all duration-300 hover:scale-105"
         >
           <FaFileExport /> Export CSV
         </button>
@@ -213,7 +228,7 @@ const Analytics = () => {
           rightContent={
             <button
               onClick={() => setChartType(chartType === "bar" ? "line" : "bar")}
-              className="text-sm px-3 py-1 bg-gray-100 rounded hover:bg-gray-200 transition"
+              className="text-sm px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-300"
             >
               Toggle Chart
             </button>
@@ -247,22 +262,22 @@ const Analytics = () => {
 // Reusable Stat Card Component
 const StatCard = ({ label, value, icon }) => (
   <motion.div
-    className="bg-white p-5 rounded-xl shadow text-center border border-gray-100 hover:shadow-md transition duration-300 transform hover:scale-[1.03]"
+    className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow text-center border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-300 transform hover:scale-[1.03]"
     whileHover={{ scale: 1.04 }}
   >
-    <div className="text-blue-600 mb-2 text-xl flex justify-center">{icon}</div>
-    <p className="text-sm text-gray-500 mb-1">{label}</p>
-    <h4 className="text-2xl font-bold text-gray-800">{value}</h4>
+    <div className="text-blue-600 dark:text-blue-400 mb-2 text-xl flex justify-center">{icon}</div>
+    <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{label}</p>
+    <h4 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{value}</h4>
   </motion.div>
 );
 
 // Reusable Chart Card Layout
 const ChartCard = ({ title, subtitle, children, rightContent }) => (
-  <div className="bg-white rounded-xl p-6 shadow transition-transform hover:scale-[1.01]">
+  <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow transition-all duration-300 hover:scale-[1.01]">
     <div className="flex justify-between items-center mb-4">
       <div>
-        <h3 className="text-lg font-semibold">{title}</h3>
-        {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">{title}</h3>
+        {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>}
       </div>
       {rightContent}
     </div>
