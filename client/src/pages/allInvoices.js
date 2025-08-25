@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "../api/axiosInstance";
+import { useAuth } from "../contexts/AuthContext";
 import {
   FaFileDownload,
   FaEye,
@@ -10,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 
 const Invoices = () => {
+    const { isAuthenticated } = useAuth();
     const [invoices, setInvoices] = useState([]);
     const [filtered, setFiltered] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -21,10 +23,12 @@ const Invoices = () => {
     useEffect(() => {
         // Fetch and filter expenses with invoices on component mount
         const fetchInvoices = async () => {
+        if (!isAuthenticated()) return;
+        
         try {
             
             // Send GET request to fetch all expenses
-            const res = await axios.get("http://localhost:4000/api/expenses");
+            const res = await axiosInstance.get("/expenses");
 
             // Filter out expenses that have an invoice attached
             const withInvoices = res.data.filter((expense) => expense.invoice);
@@ -36,7 +40,8 @@ const Invoices = () => {
             setFiltered(withInvoices);
 
             // Extract unique categories from the expenses with invoices
-            const allCategories = [...new Set(withInvoices.map((e) => e.category))];
+            const getCategoryName = (e) => e.category?.name || e.Category?.name || (typeof e.category === "string" ? e.category : "Uncategorized");
+            const allCategories = [...new Set(withInvoices.map((e) => getCategoryName(e)))];
 
             // Update categories state with the unique list
             setCategories(allCategories);
@@ -49,7 +54,7 @@ const Invoices = () => {
         };
 
         fetchInvoices();
-    }, []);
+    }, [isAuthenticated]);
 
     useEffect(() => {
         //Filters the invoices list based on search term, selected category, and date range, and updates the filtered state.
@@ -62,14 +67,14 @@ const Invoices = () => {
             result = result.filter(
                 (e) =>
                 e.title.toLowerCase().includes(term) ||
-                e.category.toLowerCase().includes(term) ||
+                (e.category?.name || e.Category?.name || (typeof e.category === "string" ? e.category : "")).toLowerCase().includes(term) ||
                 e.amount.toString().includes(term)
             );
         }
 
         // Filter by selected category
         if (selectedCategory) {
-            result = result.filter((e) => e.category === selectedCategory);
+            result = result.filter((e) => (e.category?.name || e.Category?.name || (typeof e.category === "string" ? e.category : "")) === selectedCategory);
         }
 
         // Filter by date range (from - to)
@@ -112,18 +117,18 @@ const Invoices = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4 }}
-            className="max-w-7xl mx-auto p-6 mt-10"
+            className="max-w-7xl mx-auto p-6 mt-10 bg-gray-50 dark:bg-gray-900 min-h-screen transition-all duration-300"
         >
 
             {/* Page heading */}
-            <h2 className="text-4xl font-bold text-blue-700 mb-4">📑 All Uploaded Invoices</h2>
+            <h2 className="text-4xl font-bold text-blue-700 dark:text-blue-400 mb-4 transition-all duration-300">📑 All Uploaded Invoices</h2>
 
             {/* Summary panel showing total invoices and total amount */}
             <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
-                className="mb-6 bg-gray-50 p-4 rounded-lg shadow-sm flex flex-wrap justify-between gap-4 text-sm text-gray-700"
+                className="mb-6 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg shadow-sm flex flex-wrap justify-between gap-4 text-sm text-gray-700 dark:text-gray-300 transition-all duration-300"
             >
                 <span><strong>Total Invoices:</strong> {filtered.length}</span>
                 <span><strong>Total Amount:</strong> ₹{totalAmount}</span>
@@ -142,12 +147,12 @@ const Invoices = () => {
                 placeholder="🔍 Search title, category, amount"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="border rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-300 transition-all duration-300"
             />
 
             {/* Category filter dropdown */}
             <select
-                className="border rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-400 dark:focus:ring-indigo-300 transition-all duration-300"
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
             >
@@ -163,7 +168,7 @@ const Invoices = () => {
             <div className="flex gap-2">
                 <input
                     type="date"
-                    className="border rounded-lg px-3 py-2 w-full"
+                    className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 w-full transition-all duration-300"
                     value={dateRange.from}
                     onChange={(e) =>
                         setDateRange((prev) => ({ ...prev, from: e.target.value }))
@@ -171,7 +176,7 @@ const Invoices = () => {
                 />
                 <input
                     type="date"
-                    className="border rounded-lg px-3 py-2 w-full"
+                    className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 w-full transition-all duration-300"
                     value={dateRange.to}
                     onChange={(e) =>
                         setDateRange((prev) => ({ ...prev, to: e.target.value }))
@@ -193,7 +198,7 @@ const Invoices = () => {
                     setSelectedCategory("");
                     setDateRange({ from: "", to: "" });
                 }}
-                className="bg-red-100 text-red-700 text-sm px-4 py-2 rounded-lg hover:bg-red-200 transition"
+                className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-sm px-4 py-2 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-all duration-300"
                 >
                 Clear Filters
             </button>
@@ -208,7 +213,7 @@ const Invoices = () => {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    className="text-center text-gray-500 mt-12"
+                    className="text-center text-gray-500 dark:text-gray-400 mt-12 transition-all duration-300"
                 >
                     🚫 No invoices match your filters.
                 </motion.div>
@@ -219,7 +224,8 @@ const Invoices = () => {
                     className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
                 >
                     {filtered.map((expense, index) => {
-                        const isPDF = expense.invoice.toLowerCase().endsWith(".pdf");
+                        const isPDF = String(expense.invoice).toLowerCase().endsWith(".pdf");
+                        const categoryName = expense.category?.name || expense.Category?.name || (typeof expense.category === "string" ? expense.category : "");
                         return (
                             // Individual invoice card with animation and link
                             <Link to={`/invoice/${expense.id}`} className="hover:scale-[1.015] transition-transform duration-200">
@@ -229,20 +235,20 @@ const Invoices = () => {
                                     initial={{ opacity: 0, y: 60 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: index * 0.05 }}
-                                    className="bg-white rounded-xl border shadow p-4 flex flex-col justify-between"
+                                    className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow p-4 flex flex-col justify-between transition-all duration-300"
                                 >
                                     {/* Invoice card header */}
                                     <div>
                                         <div className="flex justify-between items-center mb-1">
-                                            <h3 className="text-lg font-semibold text-gray-800">
+                                            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
                                                 {expense.title}
                                             </h3>
                                             <span
                                                 className={`text-xs px-2 py-1 rounded-full
                                                     ${ 
                                                         isPDF
-                                                        ? "bg-red-100 text-red-600"
-                                                        : "bg-green-100 text-green-600"
+                                                        ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-300"
+                                                        : "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-300"
                                                     }
                                                 `}
                                             >
@@ -255,30 +261,30 @@ const Invoices = () => {
                                         </div>
 
                                         {/* Expense details */}
-                                        <p className="text-sm text-green-600 mb-1">₹{expense.amount}</p>
-                                        <p className="text-sm text-gray-500">
+                                        <p className="text-sm text-green-600 dark:text-green-400 mb-1">₹{expense.amount}</p>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">
                                             {new Date(expense.date).toLocaleDateString("en-IN", {
                                                 year: "numeric",
                                                 month: "short",
                                                 day: "numeric",
                                             })}
                                         </p>
-                                        <p className="text-sm text-indigo-500">{expense.category}</p>
+                                        <p className="text-sm text-indigo-500 dark:text-indigo-400">{categoryName}</p>
                                     </div>
 
                                     {/* Preview section: PDF or Image */}
                                     <div className="mt-4">
                                         {isPDF ? (
                                             <embed
-                                                src={`http://localhost:4000/${expense.invoice}`}
+                                                src={`http://localhost:4000/uploads/invoices/${expense.invoice}`}
                                                 type="application/pdf"
-                                                className="w-full h-48 border rounded"
+                                                className="w-full h-48 border border-gray-200 dark:border-gray-600 rounded transition-all duration-300"
                                             />
                                         ) : (
                                             <img
-                                                src={`http://localhost:4000/${expense.invoice}`}
+                                                src={`http://localhost:4000/uploads/invoices/${expense.invoice}`}
                                                 alt="Invoice"
-                                                className="w-full h-48 object-contain rounded border"
+                                                className="w-full h-48 object-contain rounded border border-gray-200 dark:border-gray-600 transition-all duration-300"
                                             />
                                         )}
                                     </div>
@@ -286,18 +292,18 @@ const Invoices = () => {
                                     {/* Action links: Download and View */}
                                     <div className="mt-4 flex justify-between items-center text-sm">
                                         <a
-                                            href={`http://localhost:4000/api/download/${expense.invoice.split("/").pop()}`}
+                                            href={`http://localhost:4000/api/expenses/download/${expense.id}`}
                                             onClick={(e) => e.stopPropagation()}
-                                            className="flex items-center gap-2 text-blue-600 hover:underline"
+                                            className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline transition-all duration-300"
                                         >
                                             <FaFileDownload /> Download
                                         </a>
                                         <a
-                                            href={`http://localhost:4000/${expense.invoice}`}
+                                            href={`http://localhost:4000/uploads/invoices/${expense.invoice}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             onClick={(e) => e.stopPropagation()}
-                                            className="flex items-center gap-2 text-indigo-600 hover:underline"
+                                            className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:underline transition-all duration-300"
                                         >
                                             <FaEye /> View
                                         </a>
