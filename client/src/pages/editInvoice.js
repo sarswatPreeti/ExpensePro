@@ -1,19 +1,23 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "../api/axiosInstance";
+import { useAuth } from "../contexts/AuthContext";
 import { FaSave, FaTimes } from "react-icons/fa";
 
 const EditInvoice = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { isAuthenticated } = useAuth();
     const [expense, setExpense] = useState(null);
     const [selectedFile, setSelectedFile] = useState(null);
     // const [preview, setPreview] = useState(null);
 
     useEffect(() => {
         const fetchExpense = async () => {
+          if (!isAuthenticated()) return;
+          
         try {
-            const res = await axios.get(`http://localhost:4000/api/expenses/expenses/${id}`);
+            const res = await axiosInstance.get(`/expenses/${id}`);
 
             // Update state with the fetched expense
             setExpense(res.data);
@@ -27,7 +31,7 @@ const EditInvoice = () => {
 
         // Call the function when component mounts or when `id` changes
         fetchExpense();
-    }, [id]); // Dependency: re-run this effect when `id` changes
+    }, [id, isAuthenticated]); // Dependency: re-run this effect when `id` changes
 
     const handleFileChange = (e) => {
 
@@ -58,7 +62,7 @@ const EditInvoice = () => {
         formData.append("invoice", selectedFile);
 
         try {
-        await axios.put(`http://localhost:4000/api/expenses/${id}/upload-invoice`, formData);
+        await axiosInstance.put(`/expenses/${id}`, formData);
 
         // On success, alert the user and navigate back to the invoice page
         alert("Invoice uploaded successfully!");
@@ -83,27 +87,27 @@ const EditInvoice = () => {
     */
 
     return (
-        <div className="max-w-xl mx-auto mt-10 bg-white shadow-lg rounded-xl p-6">
+        <div className="max-w-xl mx-auto mt-10 bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6 transition-all duration-300">
             {/* Heading */}
-            <h2 className="text-2xl font-bold mb-4 text-blue-600">Edit Invoice File</h2>
+            <h2 className="text-2xl font-bold mb-4 text-blue-600 dark:text-blue-400 transition-all duration-300">Edit Invoice File</h2>
 
             {/* Show current invoice only if it exists and no new file is selected */}
             {expense.invoice && !selectedFile && (
                 <div className="mb-4">
-                    <p className="text-gray-600 mb-1 font-medium">Current Invoice:</p>
+                    <p className="text-gray-600 dark:text-gray-300 mb-1 font-medium transition-all duration-300">Current Invoice:</p>
 
                     {/* Render PDF using <embed>, otherwise render image */}
                     {expense.invoice.endsWith(".pdf") ? (
                         <embed
                             src={`http://localhost:4000/${expense.invoice}`}
                             type="application/pdf"
-                            className="w-full h-72 border rounded"
+                            className="w-full h-72 border border-gray-200 dark:border-gray-600 rounded transition-all duration-300"
                         />
                     ) : (
                         <img
                             src={`http://localhost:4000/${expense.invoice}`}
                             alt="Current Invoice"
-                            className="w-full max-h-[400px] object-contain border rounded"
+                            className="w-full max-h-[400px] object-contain border border-gray-200 dark:border-gray-600 rounded transition-all duration-300"
                         />
                     )}
                 </div>
@@ -111,29 +115,29 @@ const EditInvoice = () => {
 
             {/* File Picker Section */}
             <div className="mb-6">
-                <label className="block font-medium mb-2">Upload New Invoice:</label>
+                <label className="block font-medium mb-2 text-gray-700 dark:text-gray-300 transition-all duration-300">Upload New Invoice:</label>
                 <input
                     type="file"
                     accept="image/*,.pdf"
                     onChange={handleFileChange}
-                    className="border px-4 py-2 rounded-md w-full"
+                    className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-4 py-2 rounded-md w-full transition-all duration-300"
                 />
 
                 {/* Preview the newly selected file */}
                 {selectedFile && (
                     <div className="mt-4">
-                        <p className="text-gray-600 mb-2 font-medium">New Invoice Preview:</p>
+                        <p className="text-gray-600 dark:text-gray-300 mb-2 font-medium transition-all duration-300">New Invoice Preview:</p>
                         {selectedFile.type === "application/pdf" ? (
                             <embed
                                 src={URL.createObjectURL(selectedFile)}
                                 type="application/pdf"
-                                className="w-full h-72 border rounded"
+                                className="w-full h-72 border border-gray-200 dark:border-gray-600 rounded transition-all duration-300"
                             />
                         ) : (
                             <img
                                 src={URL.createObjectURL(selectedFile)}
                                 alt="New Invoice"
-                                className="w-full max-h-[400px] object-contain border rounded"
+                                className="w-full max-h-[400px] object-contain border border-gray-200 dark:border-gray-600 rounded transition-all duration-300"
                                 />
                         )}
                     </div>
@@ -146,7 +150,7 @@ const EditInvoice = () => {
                 {/* Cancel button */}
                 <button
                     onClick={handleCancel}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-300 dark:hover:bg-gray-500 transition-all duration-300"
                 >
                     <FaTimes /> Cancel
                 </button>
@@ -154,7 +158,7 @@ const EditInvoice = () => {
                 {/* Save/upload button */}
                 <button
                     onClick={handleUpload}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-all duration-300"
                 >
                     <FaSave /> Save Invoice
                 </button>
