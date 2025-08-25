@@ -15,6 +15,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* HTML element tweaks */
@@ -22,6 +23,12 @@ html {
   scroll-behavior: smooth; /* Enables smooth scrolling for anchor links */
   margin: 0;
   padding: 0;
+  transition: background-color 0.3s ease;
+}
+
+/* Global transition for all elements */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* Code block font styling */
@@ -125,15 +132,67 @@ code {
   animation: pop 1.2s ease-out forwards;
 }
 
+/* Dark mode specific styles */
+.dark {
+  color-scheme: dark;
+}
 
+/* Custom button styles with dark mode support */
 .btn-primary {
-  @apply bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition;
+  @apply bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-all duration-300;
 }
 
 .btn-outline {
-  @apply border border-gray-400 text-gray-700 dark:text-white px-4 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition;
+  @apply border border-gray-400 dark:border-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-300;
 }
 
 .btn-danger {
-  @apply bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition;
+  @apply bg-red-600 dark:bg-red-500 text-white px-4 py-2 rounded hover:bg-red-700 dark:hover:bg-red-600 transition-all duration-300;
+}
+
+/* Calendar dark mode styles */
+.react-calendar {
+  @apply bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg;
+}
+
+.react-calendar__tile {
+  @apply text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200;
+}
+
+.react-calendar__tile--active {
+  @apply bg-blue-500 dark:bg-blue-600 text-white;
+}
+
+.react-calendar__tile--now {
+  @apply bg-yellow-100 dark:bg-yellow-900;
+}
+
+.react-calendar__navigation button {
+  @apply text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700;
+}
+
+.react-calendar__month-view__weekdays {
+  @apply text-gray-600 dark:text-gray-400;
+}
+
+/* Form elements dark mode */
+input, select, textarea {
+  @apply transition-all duration-300;
+}
+
+/* Scrollbar styling for dark mode */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-gray-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-gray-500;
 }
