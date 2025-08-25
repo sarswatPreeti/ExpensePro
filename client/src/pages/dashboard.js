@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
-import axios from "axios";
+import axiosInstance from "../api/axiosInstance";
+import { useAuth } from "../contexts/AuthContext";
 import {
   FaWallet,
   FaListUl,
@@ -25,19 +26,19 @@ import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { useNavigate } from "react-router-dom";
 
-const EXPENSE_API = "http://localhost:4000/api/expenses";
-
-const COLORS = [
-  "#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#AF19FF",
-  "#FF4F81", "#3DFF92", "#FF6361", "#6B5B95", "#D65076"
-];
-
-const getDateOnly = (date) => {
-  const d = new Date(date);
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-};
-
 const DashboardPage = () => {
+  const { isAuthenticated } = useAuth();
+  
+  const getDateOnly = (date) => {
+    const d = new Date(date);
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  };
+  
+  // Helper to safely get a category name string
+  const getCategoryNameFromExpense = (expense) => (
+    expense?.category?.name || expense?.Category?.name || (typeof expense?.category === "string" ? expense.category : "Uncategorized")
+  );
+  
   const [expenses, setExpenses] = useState([]);
   const [categoryStats, setCategoryStats] = useState([]);
   const [dayWiseData, setDayWiseData] = useState([]);
@@ -85,35 +86,40 @@ const DashboardPage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!isAuthenticated()) {
+        navigate('/login');
+        return;
+      }
+
       setLoading(true);
       try {
-        const res = await axios.get(EXPENSE_API);
+        const res = await axiosInstance.get("/expenses");
         const sorted = res.data.sort((a, b) => new Date(b.date) - new Date(a.date));
         setExpenses(sorted);
 
         const categoryMap = {};
         sorted.forEach((expense) => {
-          const category = expense.category || "Uncategorized";
+          const category = getCategoryNameFromExpense(expense);
           if (!categoryMap[category]) categoryMap[category] = 0;
           categoryMap[category] += Number(expense.amount);
         });
 
-        const stats = Object.entries(categoryMap).map(([category, total]) => ({
-          category,
-          total,
+        const categoryData = Object.entries(categoryMap).map(([name, value]) => ({
+          name,
+          value,
         }));
 
-        setCategoryStats(stats);
+        setCategoryStats(categoryData);
         setDayWiseData(getLast7DaysData());
       } catch (error) {
-        console.error("Failed to fetch dashboard data", error);
+        console.error("Failed to fetch dashboard data:", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [isAuthenticated, navigate]);
 
   // Effect for updating `dayWiseData` daily (or when expenses change)
   useEffect(() => {
@@ -146,7 +152,7 @@ const DashboardPage = () => {
 
   const totalSpent = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
   const totalTransactions = expenses.length;
-  const categoryCount = new Set(expenses.map(e => e.category)).size;
+  const categoryCount = new Set(expenses.map((e) => getCategoryNameFromExpense(e))).size;
 
   // const today = getDateOnly(new Date());
 
@@ -309,7 +315,7 @@ const DashboardPage = () => {
 
       const total = expenses
         .filter(exp => new Date(exp.date).toLocaleDateString("en-GB") === formatted)
-        .reduce((sum, exp) => sum + exp.amount, 0);
+        .reduce((sum, exp) => sum + Number(exp.amount), 0);
 
       return {
         day: date.toLocaleDateString("en-GB", {
@@ -334,19 +340,19 @@ const DashboardPage = () => {
   };
 
   const SummaryCard = ({ icon, label, value }) => (
-    <div className="bg-white p-6 rounded-xl shadow-md flex items-center gap-4">
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md flex items-center gap-4 transition-all duration-300">
       {icon}
       <div>
-        <p className="text-sm text-gray-500">{label}</p>
-        <p className="text-xl font-semibold text-gray-800">{value}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
+        <p className="text-xl font-semibold text-gray-800 dark:text-gray-100">{value}</p>
       </div>
     </div>
   );
 
   const ComparisonCard = ({ label, amount, change, color }) => (
-    <div className="bg-white p-6 rounded-xl shadow-md">
-      <p className="text-sm text-gray-500 mb-1">{label}</p>
-      <p className={`text-2xl font-bold ${textColorMap[color]}`}>
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md transition-all duration-300">
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{label}</p>
+      <p className={`text-2xl font-bold ${textColorMap[color]} dark:text-${color}-400`}>
         ₹{amount.toFixed(2)} <span className="text-sm">{change}</span>
       </p>
     </div>
@@ -355,18 +361,18 @@ const DashboardPage = () => {
   const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#14b8a6"];
 
   const CategoryPieChart = ({ data }) => (
-    <div className="bg-white p-6 rounded-2xl shadow-lg mb-12">
-      <h3 className="text-2xl font-semibold mb-6 text-center text-gray-800">
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg mb-12 transition-all duration-300">
+      <h3 className="text-2xl font-semibold mb-6 text-center text-gray-800 dark:text-gray-100">
         💹 Spending Distribution by Category
       </h3>
       <ResponsiveContainer width="100%" height={400}>
         <PieChart>
           <Pie
             data={data}
-            dataKey="total"
-            nameKey="category"
+            dataKey="value"
+            nameKey="name"
             outerRadius={140}
-            label={({ percent, category }) => `${category} ${(percent * 100).toFixed(1)}%`}
+            label={({ percent, name }) => `${name} ${(percent * 100).toFixed(1)}%`}
           >
             {data.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -380,8 +386,8 @@ const DashboardPage = () => {
   );
 
   const ExpenseTrendChart = ({ data }) => (
-    <div className="bg-white p-6 rounded-2xl shadow-lg mb-12">
-      <h3 className="text-2xl font-semibold mb-6 text-center text-gray-800">
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg mb-12 transition-all duration-300">
+      <h3 className="text-2xl font-semibold mb-6 text-center text-gray-800 dark:text-gray-100">
         📈 Expense Trend Over Time
       </h3>
       <ResponsiveContainer width="100%" height={300}>
@@ -418,16 +424,16 @@ const DashboardPage = () => {
   );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen space-y-12">
-      <h2 className="text-4xl font-bold text-center text-gray-800 mb-10 animate-fade-in">
+    <div className="p-6 max-w-7xl mx-auto bg-gray-50 dark:bg-gray-900 min-h-screen space-y-12 transition-all duration-300">
+      <h2 className="text-4xl font-bold text-center text-gray-800 dark:text-gray-100 mb-10 animate-fade-in">
         📊 Expense Dashboard Overview
       </h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
         {/* Summary Cards */}
-        <SummaryCard icon={<FaWallet className="text-3xl text-blue-600" />} label="Total Spent" value={`₹${totalSpent.toFixed(2)}`} />
-        <SummaryCard icon={<FaListUl className="text-3xl text-indigo-600" />} label="Transactions" value={totalTransactions} />
-        <SummaryCard icon={<FaTags className="text-3xl text-green-600" />} label="Categories Used" value={categoryCount} />
+        <SummaryCard icon={<FaWallet className="text-3xl text-blue-600 dark:text-blue-400" />} label="Total Spent" value={`₹${totalSpent.toFixed(2)}`} />
+        <SummaryCard icon={<FaListUl className="text-3xl text-indigo-600 dark:text-indigo-400" />} label="Transactions" value={totalTransactions} />
+        <SummaryCard icon={<FaTags className="text-3xl text-green-600 dark:text-green-400" />} label="Categories Used" value={categoryCount} />
 
         {/* Comparison Cards */}
         <ComparisonCard label="Today vs Yesterday" amount={todayTotal} change={todayTrend.change} color="blue" />
@@ -438,14 +444,14 @@ const DashboardPage = () => {
       {/* Calendar + Weekly Chart + Recent Expenses */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
         {/* Calendar Section */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-md p-5 w-full col-span-1">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-md p-5 w-full col-span-1 transition-all duration-300">
           <div className="flex justify-between items-center mb-3 px-1">
-            <h3 className="text-lg font-semibold text-gray-800">📅 Select Date</h3>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">📅 Select Date</h3>
             {!selectedDate &&
               (activeStartDate.getMonth() !== new Date().getMonth() ||
                 activeStartDate.getFullYear() !== new Date().getFullYear()) && (
                 <button
-                  className="text-sm text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1 rounded-md transition"
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-md transition-all duration-300"
                   onClick={() => setActiveStartDate(new Date())}
                 >
                   🔄 Return to{" "}
@@ -466,11 +472,11 @@ const DashboardPage = () => {
             onActiveStartDateChange={({ activeStartDate }) =>
               setActiveStartDate(activeStartDate)
             }
-            className="rounded shadow border hover:shadow-lg transition duration-300"
+            className="rounded shadow border border-gray-200 dark:border-gray-600 hover:shadow-lg transition-all duration-300"
           />
           {selectedDate && (
             <button
-              className="mt-4 w-full py-2 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition"
+              className="mt-4 w-full py-2 bg-red-500 dark:bg-red-600 text-white text-sm rounded hover:bg-red-600 dark:hover:bg-red-700 transition-all duration-300"
               onClick={() => {
                 const now = new Date();
                 setCalendarDate(now);
@@ -484,13 +490,13 @@ const DashboardPage = () => {
         </div>
 
         {/* Weekly Bar Chart */}
-        <div className="bg-white p-6 rounded-2xl shadow-lg col-span-2">
-          <h3 className="text-2xl font-semibold mb-6 text-center text-gray-800">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg col-span-2 transition-all duration-300">
+          <h3 className="text-2xl font-semibold mb-6 text-center text-gray-800 dark:text-gray-100">
             📅 Last 7 Days Spending
           </h3>
 
           {loading ? (
-            <p className="text-center text-gray-500">Loading chart...</p>
+            <p className="text-center text-gray-500 dark:text-gray-400">Loading chart...</p>
           ): dayWiseData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart
@@ -498,23 +504,23 @@ const DashboardPage = () => {
                 margin={{ top: 20, right: 30, left: 10, bottom: 40 }}
                 barCategoryGap={16}
               >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" />
                 <XAxis
                   dataKey="day"
                   tickFormatter={(value) => value.slice(0, 3)}
-                  tick={{ fontSize: 13, fill: "#374151" }}
-                  axisLine={{ stroke: "#E5E7EB" }}
+                  tick={{ fontSize: 13, fill: "#6b7280" }}
+                  axisLine={{ stroke: "#374151" }}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 13, fill: "#374151" }}
-                  axisLine={{ stroke: "#E5E7EB" }}
+                  tick={{ fontSize: 13, fill: "#6b7280" }}
+                  axisLine={{ stroke: "#374151" }}
                   tickLine={false}
                 />
                 <Tooltip
                   formatter={(value) => `₹${value.toFixed(2)}`}
-                  contentStyle={{ backgroundColor: "#f9fafb", borderColor: "#d1d5db" }}
-                  labelStyle={{ fontWeight: "bold", color: "#111827" }}
+                  contentStyle={{ backgroundColor: "#1f2937", borderColor: "#374151", color: "#f9fafb" }}
+                  labelStyle={{ fontWeight: "bold", color: "#f9fafb" }}
                 />
                 <Bar
                   dataKey="total"
@@ -526,7 +532,7 @@ const DashboardPage = () => {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="text-center text-gray-400 italic col-span-2">
+            <div className="text-center text-gray-400 dark:text-gray-500 italic col-span-2">
               No expense data for the last 7 days.
             </div>
           )}
@@ -534,11 +540,11 @@ const DashboardPage = () => {
       </div>
 
       {/* Recent Expenses - full width below */}
-      <div className="mb-12 bg-white p-6 rounded-2xl shadow-md">
-        <h3 className="text-2xl font-semibold mb-6 text-gray-800">🕒 Recent Expenses</h3>
-        <p className="text-sm text-gray-500 mb-6">
+      <div className="mb-12 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md transition-all duration-300">
+        <h3 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">🕒 Recent Expenses</h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
           Showing expenses for:{" "}
-          <span className="text-gray-800 font-medium">
+          <span className="text-gray-800 dark:text-gray-200 font-medium">
             {selectedDate
               ? new Date(selectedDate).toLocaleDateString("en-GB", {
                   day: "numeric",
@@ -548,23 +554,23 @@ const DashboardPage = () => {
               : "All Dates"}
           </span>
         </p>
-        <ul className="divide-y divide-gray-200">
+        <ul className="divide-y divide-gray-200 dark:divide-gray-700">
           {recentExpenses.map((exp, index) => (
             <li key={index} className="py-3 flex justify-between items-center">
               <div>
-                <p className="text-gray-700 font-medium">{exp.title}</p>
-                <p className="text-sm text-gray-500">
-                  {new Date(exp.date).toLocaleDateString()} — {exp.category}
+                <p className="text-gray-700 dark:text-gray-200 font-medium">{exp.title}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {new Date(exp.date).toLocaleDateString()} — {getCategoryNameFromExpense(exp)}
                 </p>
               </div>
-              <p className="text-blue-600 font-bold">₹{exp.amount.toFixed(2)}</p>
+              <p className="text-blue-600 dark:text-blue-400 font-bold">₹{Number(exp.amount).toFixed(2)}</p>
             </li>
           ))}
         </ul>
         <div className="mt-4 text-right">
           <button
             onClick={() => navigate("/expenses")}
-            className="text-sm px-4 py-2 bg-blue-100 text-blue-700 font-medium rounded hover:bg-blue-200 transition"
+            className="text-sm px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-all duration-300"
           >
             View All Expenses
           </button>
@@ -578,9 +584,9 @@ const DashboardPage = () => {
 
       {/* Trend Filter */}
       <div className="mb-4 flex items-center gap-4 justify-end">
-        <label className="text-sm font-medium text-gray-700">Trend Period:</label>
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Trend Period:</label>
         <select
-          className="border rounded px-3 py-1 text-sm"
+          className="border border-gray-300 dark:border-gray-600 rounded px-3 py-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 transition-all duration-300"
           value={filterDays || ""}
           onChange={(e) => setFilterDays(e.target.value ? Number(e.target.value) : null)}
         >
@@ -591,7 +597,7 @@ const DashboardPage = () => {
         {filterDays && (
           <button
             onClick={() => setFilterDays(null)}
-            className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200"
+            className="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 px-2 py-1 rounded hover:bg-red-200 dark:hover:bg-red-900/50 transition-all duration-300"
           >
             Clear Filter
           </button>
@@ -602,7 +608,7 @@ const DashboardPage = () => {
       {trendData.length > 0 ? (
         <ExpenseTrendChart data={trendData} />
       ) : (
-        <div className="text-center text-gray-500 mb-12">
+        <div className="text-center text-gray-500 dark:text-gray-400 mb-12">
           No data to display in this period.
         </div>
       )}
