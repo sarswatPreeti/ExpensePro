@@ -267,7 +267,7 @@ const featureLinks = features.map(f => f.title);
 const HomePage = () => {
 
   return (
-    <div className="bg-white min-h-screen text-gray-800 px-0 m-0">
+    <div className="bg-white dark:bg-gray-900 min-h-screen text-gray-800 dark:text-gray-100 px-0 m-0 transition-all duration-300">
       {/* Top Navigation Bar */}
       <TopNavbar featureLinks={featureLinks} />
 
@@ -303,7 +303,7 @@ const HomePage = () => {
       <AuthSection/>
 
       {/* Footer Section */}
-      <footer className="text-center text-sm py-8 text-gray-500">
+      <footer className="text-center text-sm py-8 text-gray-500 dark:text-gray-400 transition-all duration-300">
         © {new Date().getFullYear()} ExpensePro. All rights reserved.
       </footer>
     </div>
