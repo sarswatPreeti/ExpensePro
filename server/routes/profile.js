@@ -4,6 +4,7 @@ const profileController = require("../controllers/profileController"); // Import
 const {authenticateToken} = require("../middlewares/authMiddleware"); // Middleware to verify JWT tokens
 const multer = require("multer"); // For handling file uploads (profile image upload)
 const path = require("path");
+const fs = require("fs");
 
 // Create a storage location for profile images
 const storage = multer.diskStorage({
