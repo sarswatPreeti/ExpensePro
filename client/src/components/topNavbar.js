@@ -15,12 +15,12 @@ const Navbar = ({ featureLinks = [] }) => {
   const [isOpen, setIsOpen] = useState(false); // Controls visibility of mobile sidebar
 
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50 w-full">
+    <nav className="bg-white dark:bg-gray-900 shadow-md sticky top-0 z-50 w-full transition-all duration-300">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-4 flex items-center justify-between">
         {/* -------- Logo Section -------- */}
         <a
           href="#"
-          className="text-2xl sm:text-3xl lg:text-[1.75rem] xl:text-4xl font-extrabold text-indigo-600 tracking-tight whitespace-nowrap pr-6"
+          className="text-2xl sm:text-3xl lg:text-[1.75rem] xl:text-4xl font-extrabold text-indigo-600 dark:text-indigo-400 tracking-tight whitespace-nowrap pr-6 transition-all duration-300"
         >
           💰 ExpensePro
         </a>
@@ -31,7 +31,7 @@ const Navbar = ({ featureLinks = [] }) => {
             <a
               key={feature}
               href={`#${feature.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9\-]/g, "")}`} // Creates anchor link ID
-              className="text-sm lg:text-base xl:text-lg text-gray-700 font-medium hover:text-indigo-600 transition duration-300 whitespace-nowrap"
+              className="text-sm lg:text-base xl:text-lg text-gray-700 dark:text-gray-300 font-medium hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-300 whitespace-nowrap"
             >
               {feature}
             </a>
@@ -40,7 +40,7 @@ const Navbar = ({ featureLinks = [] }) => {
           {/* Call-to-action button */}
           <a
             href="#auth"
-            className="text-sm xl:text-base bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition font-semibold shadow whitespace-nowrap"
+            className="text-sm xl:text-base bg-indigo-600 dark:bg-indigo-500 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-all duration-300 font-semibold shadow whitespace-nowrap"
           >
             Get Started
           </a>
@@ -49,7 +49,7 @@ const Navbar = ({ featureLinks = [] }) => {
         {/* -------- Hamburger Icon (Mobile only) -------- */}
         <button
           onClick={() => setIsOpen(true)} // Open sidebar
-          className="lg:hidden text-2xl text-gray-600 hover:text-indigo-600 transition"
+          className="lg:hidden text-2xl text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-300"
           aria-label="Open menu"
         >
           <FaBars />
@@ -68,13 +68,13 @@ const Navbar = ({ featureLinks = [] }) => {
       <div
         className={`fixed top-0 ${
           isOpen ? "translate-x-0" : "translate-x-full"
-        } right-0 lg:hidden h-full w-[75%] sm:w-[60%] md:w-[50%] bg-white shadow-xl transition-transform duration-300 ease-in-out z-50 px-6 py-6`}
+        } right-0 lg:hidden h-full w-[75%] sm:w-[60%] md:w-[50%] bg-white dark:bg-gray-800 shadow-xl transition-all duration-300 ease-in-out z-50 px-6 py-6`}
       >
         <div className="flex justify-between items-center mb-6">
-          <span className="text-xl font-bold text-indigo-600">Menu</span>
+          <span className="text-xl font-bold text-indigo-600 dark:text-indigo-400">Menu</span>
           <button
             onClick={() => setIsOpen(false)} // Close sidebar
-            className="text-2xl text-gray-600 hover:text-red-600 transition"
+            className="text-2xl text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-all duration-300"
             aria-label="Close menu"
           >
             <FaTimes />
@@ -87,7 +87,7 @@ const Navbar = ({ featureLinks = [] }) => {
             <li key={feature}>
               <a
                 href={`#${feature.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9\-]/g, "")}`}
-                className="block text-lg sm:text-xl text-gray-700 font-medium hover:text-indigo-600 transition whitespace-nowrap"
+                className="block text-lg sm:text-xl text-gray-700 dark:text-gray-300 font-medium hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-300 whitespace-nowrap"
                 onClick={() => setIsOpen(false)} // Auto close sidebar on link click
               >
                 {feature}
@@ -99,7 +99,7 @@ const Navbar = ({ featureLinks = [] }) => {
           <li>
             <a
               href="#auth"
-              className="inline-block mt-2 text-white bg-indigo-600 hover:bg-indigo-700 transition px-4 py-2 rounded-xl font-semibold shadow whitespace-nowrap"
+              className="inline-block mt-2 text-white bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-700 dark:hover:bg-indigo-600 transition-all duration-300 px-4 py-2 rounded-xl font-semibold shadow whitespace-nowrap"
               onClick={() => setIsOpen(false)}
             >
               Get Started
