@@ -15,6 +15,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { v4 as uuidv4 } from "uuid";
+import { useAuth } from "../contexts/AuthContext";
+import axiosInstance from "../api/axiosInstance";
 import {
   FaArrowLeft,
   FaUserEdit,
@@ -29,6 +31,7 @@ const EditProfilePage = () => {
   const auth = getAuth();
   const navigate = useNavigate();
   const storage = getStorage();
+  const { isAuthenticated } = useAuth();
 
   const [user, setUser] = useState(null);
   const [displayName, setDisplayName] = useState("");
@@ -46,20 +49,43 @@ const EditProfilePage = () => {
   const [hasPassword, setHasPassword] = useState(false);
 
   useEffect(() => {
+    if (!isAuthenticated()) {
+      navigate("/login");
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async(currentUser) => {
       if (!currentUser) return navigate("/login");
       setUser(currentUser);
       setDisplayName(currentUser.displayName || "");
       setEmail(currentUser.email || "");
-      setImagePreview(currentUser.photoURL || "/images/image.png");
+      // Normalize existing profile image URL and fallback to default avatar
+      {
+        const raw = currentUser.photoURL;
+        let url = raw && raw !== "null" && raw !== "undefined" ? String(raw) : "";
+        if (url.includes("/uploads/profile/")) {
+          url = url.replace("/uploads/profile/", "/uploads/profileImages/");
+        }
+        setImagePreview(url || "/images/image.png");
+      }
 
-      const methods = await fetchSignInMethodsForEmail(auth, currentUser.email);
-      setIsGoogleUser(methods.includes("google.com"));
-      setHasPassword(methods.includes("password"));
+      try {
+        const methods = await fetchSignInMethodsForEmail(auth, currentUser.email);
+        const providerIds = (currentUser.providerData || []).map(p => p.providerId);
+        const google = methods.includes("google.com") || providerIds.includes("google.com");
+        const password = methods.includes("password") || providerIds.includes("password");
+        setIsGoogleUser(!!google);
+        setHasPassword(!!password);
+      } catch (e) {
+        // Fallback to providerData only if fetchSignInMethods fails
+        const providerIds = (currentUser.providerData || []).map(p => p.providerId);
+        setIsGoogleUser(providerIds.includes("google.com"));
+        setHasPassword(providerIds.includes("password"));
+      }
     });
 
     return () => unsubscribe();
-  }, [auth, navigate]);
+  }, [auth, navigate, isAuthenticated]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -74,23 +100,28 @@ const EditProfilePage = () => {
     const formData = new FormData();
     formData.append("profileImage", file);
 
-    const res = await fetch("http://localhost:4000/api/profile/upload-image", {
-      method: "POST",
-      body: formData,
+    const res = await axiosInstance.post("/profile/upload-image", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
     });
 
-    if (!res.ok) {
-      throw new Error("Image upload failed");
-    }
-
-    const data = await res.json();
-    return data.imageUrl; // URL to store in Firebase Auth or your DB
+    return res.data.imageUrl; // URL to store in Firebase Auth or your DB
   };
 
   const uploadImageToFirebase = async (file) => {
     const imageRef = ref(storage, `profileImages/${user.uid}/${uuidv4()}`);
     const snapshot = await uploadBytes(imageRef, file);
     return await getDownloadURL(snapshot.ref);
+  };
+
+  const tryUploadProfileImage = async (file) => {
+    if (!file) return null;
+    // Try backend upload first
+    try {
+      const url = await uploadImageToServer(file);
+      if (url) return url;
+    } catch (_) {}
+    // Fallback to Firebase storage
+    return await uploadImageToFirebase(file);
   };
 
   const validatePassword = (password) => {
@@ -122,11 +153,12 @@ const EditProfilePage = () => {
     }, 10000); // 10 seconds
 
     try {
-      let photoURL = uploadImageToServer(selectedImage);
+      let photoURL = user?.photoURL || imagePreview;
       console.log("Before image upload");
       if (selectedImage) {
         try {
-          photoURL = await uploadImageToFirebase(selectedImage);
+          const uploadedUrl = await tryUploadProfileImage(selectedImage);
+          if (uploadedUrl) photoURL = uploadedUrl;
           console.log("Image uploaded:", photoURL);
         } catch (err) {
           setErrorMsg("Image upload failed: " + err.message);
@@ -211,6 +243,10 @@ const EditProfilePage = () => {
               src={imagePreview}
               alt="Profile"
               className="w-full h-full rounded-full object-cover border-4 border-indigo-500 shadow-lg"
+              onError={() => {
+                if (imagePreview !== "/images/image.png") setImagePreview("/images/image.png");
+              }}
+              referrerPolicy="no-referrer"
             />
             <label
               htmlFor="imageUpload"
@@ -280,15 +316,17 @@ const EditProfilePage = () => {
               </div>
             </>
           ) : (
+            isGoogleUser && (
               <p className="text-sm text-yellow-500 text-center mb-4">
                 You signed in with Google. Set a password below to also enable email login.
               </p>
+            )
           )}
 
           <div className="w-full relative mb-3">
             <input
               type="password"
-              placeholder="New Password (min 6 chars)"
+              placeholder="New Password (8+ chars, upper/lower/number/special)"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white dark:border-gray-600 pr-10"
