@@ -14,7 +14,7 @@ import Categories from "./pages/categories";
 import Profile from "./pages/profile";
 import EditProfile from "./pages/editProfile";
 import MainLayout from "./layouts/mainLayout";
-import { AuthProvider } from "./contexts/AuthContext";
+import AuthProvider from "./contexts/AuthContext";
 import AuthGuard from "./components/authGuard";
 
 // Authentication is now handled by AuthContext
