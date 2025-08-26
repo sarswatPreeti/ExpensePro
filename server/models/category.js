@@ -1,40 +1,38 @@
-// module.exports = (sequelize, DataTypes) => {
-//   const Category = sequelize.define("Category", {
-//     name: {
-//       type: DataTypes.STRING,
-//       unique: true,
-//       allowNull: false,
-//     },
-//   });
-//   return Category;
-// };
-
-
 module.exports = (sequelize, DataTypes) => {
-  const Category = sequelize.define("Category", {
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: "user_category_unique", // Ensures user cannot add duplicate category names
+  const Category = sequelize.define(
+    "Category",
+    {
+      name: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      userId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
     },
-    userId: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      unique: "user_category_unique", // Composite unique constraint with name
-    },
-  });
+    {
+      indexes: [
+        {
+          unique: true,
+          fields: ["userId", "name"],
+        },
+      ],
+    }
+  );
 
   Category.associate = (models) => {
     Category.belongsTo(models.User, {
       foreignKey: "userId",
       as: "user",
-      onDelete: "CASCADE", // If user is deleted, delete their categories
+      onDelete: "CASCADE",
     });
 
     Category.hasMany(models.Expense, {
       foreignKey: "categoryId",
       as: "expenses",
-      onDelete: "RESTRICT", // Prevent deleting category if used in expenses
+      onDelete: "RESTRICT",
+      hooks: true,
     });
   };
 

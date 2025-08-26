@@ -1,16 +1,3 @@
-// const { DataTypes } = require("sequelize");
-
-// {/*Sequelize model for an Expense Table*/}
-// module.exports = (sequelize) =>
-//   sequelize.define("Expense", {
-//     title: { type: DataTypes.STRING(100), allowNull: false },
-//     amount: { type: DataTypes.FLOAT, allowNull: false },
-//     date: { type: DataTypes.DATEONLY, allowNull: false },
-//     category: { type: DataTypes.STRING, allowNull: false },
-//     description: { type: DataTypes.STRING(255), allowNull: true }, // Optional field
-//     invoice: { type: DataTypes.STRING, allowNull: true,} // Optional field
-//   });
-
 module.exports = (sequelize, DataTypes) => {
   const Expense = sequelize.define("Expense", {
     title: {
@@ -20,9 +7,7 @@ module.exports = (sequelize, DataTypes) => {
     amount: {
       type: DataTypes.FLOAT,
       allowNull: false,
-      validate: {
-        min: 0,
-      },
+      validate: { min: 0 },
     },
     date: {
       type: DataTypes.DATEONLY,
@@ -33,8 +18,25 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
     },
     invoice: {
-      type: DataTypes.STRING, // Can store filename or file URL
+      type: DataTypes.STRING,
       allowNull: true,
+    },
+    paymentMethod: {
+      type: DataTypes.ENUM(
+        "Cash",
+        "Paytm",
+        "Debit Card",
+        "GPay",
+        "PhonePe",
+        "Credit Card"
+      ),
+      allowNull: false,
+      defaultValue: "Cash",
+    },
+    cardLast4: {
+      type: DataTypes.STRING(4),
+      allowNull: true,
+      validate: { isNumeric: true, len: [4, 4] },
     },
     userId: {
       type: DataTypes.INTEGER,
@@ -49,12 +51,16 @@ module.exports = (sequelize, DataTypes) => {
   Expense.associate = (models) => {
     Expense.belongsTo(models.User, {
       foreignKey: "userId",
-      onDelete: "CASCADE", // Delete expenses if user is deleted
+      as: "user",
+      onDelete: "CASCADE",
+      hooks: true,
     });
 
     Expense.belongsTo(models.Category, {
       foreignKey: "categoryId",
-      onDelete: "RESTRICT", // Prevent deleting a category that's in use
+      as: "category",
+      onDelete: "RESTRICT",
+      hooks: true,
     });
   };
 
