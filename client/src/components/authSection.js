@@ -12,7 +12,7 @@ import { FaSignInAlt, FaUserPlus } from "react-icons/fa";
 
 const AuthSection = () => {
   return (
-    <section id="auth" className="bg-indigo-50 py-16 sm:py-20 md:py-28 lg:py-32">
+    <section id="auth" className="bg-indigo-50 dark:bg-gray-800 py-16 sm:py-20 md:py-28 lg:py-32 transition-all duration-300">
       <div className="max-w-screen-xl mx-auto px-4">
 
         {/* Grid layout: text on left, image on right (2 columns on md+) */}
@@ -22,16 +22,16 @@ const AuthSection = () => {
           <div className="text-center md:text-left">
 
             {/* Section Heading */}
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-indigo-800 mb-5 leading-tight tracking-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-indigo-800 dark:text-indigo-200 mb-5 leading-tight tracking-tight">
               Ready to take control{" "}
               <br className="hidden md:inline" /> {/* Adds line break on medium+ screens */}
               of your finances?
             </h2>
 
             {/* Subheading Text */}
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-700 mb-6">
+            <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-700 dark:text-gray-300 mb-6">
               New to 
-              <span className="font-semibold text-indigo-600">ExpensePro</span>
+              <span className="font-semibold text-indigo-600 dark:text-indigo-400">ExpensePro</span>
               ? Create an account and start tracking your expenses.
               <br className="hidden md:inline" /> {/* Conditional line break */}
               Already a user? Just log in and continue your journey!
@@ -43,7 +43,7 @@ const AuthSection = () => {
               {/* Sign Up Button */}
               <Link
                 to="/register"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 lg:px-6 lg:py-3 rounded-xl text-sm lg:text-lg flex items-center gap-2 shadow-md transition duration-300"
+                className="bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-700 dark:hover:bg-indigo-600 text-white px-4 py-2 lg:px-6 lg:py-3 rounded-xl text-sm lg:text-lg flex items-center gap-2 shadow-md transition-all duration-300"
               >
                 <FaUserPlus />
                 Sign Up
@@ -52,7 +52,7 @@ const AuthSection = () => {
               {/* Log In Button */}
               <Link
                 to="/login"
-                className="border border-indigo-600 text-indigo-700 px-4 py-2 lg:px-6 lg:py-3 rounded-xl text-sm lg:text-lg flex items-center gap-2 hover:bg-indigo-100 transition duration-300"
+                className="border border-indigo-600 dark:border-indigo-400 text-indigo-700 dark:text-indigo-300 px-4 py-2 lg:px-6 lg:py-3 rounded-xl text-sm lg:text-lg flex items-center gap-2 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-all duration-300"
               >
                 <FaSignInAlt />
                 Log In
