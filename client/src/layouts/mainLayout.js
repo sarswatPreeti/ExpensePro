@@ -1,22 +1,8 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom"; // Hook to access the current route location
 import Sidebar from "../components/sidebar";
-import DarkModeToggle from "../components/darkModeToggle";
 
 const MainLayout = ({ children }) => {
-  const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem("theme") === "dark";
-  });
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (darkMode) {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-    localStorage.setItem("theme", darkMode ? "dark" : "light");
-  }, [darkMode]);
 
   const location = useLocation(); // Get the current location object from React Router
 
@@ -32,12 +18,8 @@ const MainLayout = ({ children }) => {
       {/* Conditionally render the Sidebar unless on excluded routes */}
       {!shouldHideSidebar && <Sidebar />}
 
-      {/* Main content area; apply left margin if sidebar is shown */}
-      <main className={`${!shouldHideSidebar ? "ml-64" : ""} w-full bg-gray-100 dark:bg-gray-900 min-h-screen transition-all duration-300`}>
-
-        <div className="flex justify-end">
-          <DarkModeToggle isDark={darkMode} toggle={() => setDarkMode(!darkMode)} />
-        </div>
+      {/* Main content area; apply responsive left margin if sidebar is shown */}
+      <main className={`${!shouldHideSidebar ? "ml-16 sm:ml-20 md:ml-48 lg:ml-56 xl:ml-64" : ""} w-full bg-gray-100 dark:bg-gray-900 min-h-screen transition-all duration-300`}>
 
         {/* Render the child components/content */}
         {children}
