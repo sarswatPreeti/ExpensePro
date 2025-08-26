@@ -22,7 +22,7 @@ const MiniFeatureCard = ({ feature }) => {
         <div className="px-4 h-full w-full">
             {/* -------- Card Container with Floating Animation -------- */}
             <motion.div
-                className="bg-white rounded-xl shadow-md p-4 sm:p-5 md:p-6 flex flex-col items-center text-center hover:shadow-xl transition-transform transform hover:scale-105 h-full"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 sm:p-5 md:p-6 flex flex-col items-center text-center hover:shadow-xl transition-all duration-300 transform hover:scale-105 h-full"
                 initial={{ y: 0 }}
                 animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 3, repeat: Infinity }}
@@ -35,12 +35,12 @@ const MiniFeatureCard = ({ feature }) => {
                 />
 
                 {/* -------- Feature Title -------- */}
-                <h4 className="text-md sm:text-lg font-semibold text-indigo-700 mb-2">
+                <h4 className="text-md sm:text-lg font-semibold text-indigo-700 dark:text-indigo-400 mb-2">
                     {feature.title}
                 </h4>
 
                 {/* -------- Feature Description with Read More / Show Less -------- */}
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-300">
                     {shouldTruncate && !readMore
                         ? `${feature.description.slice(0, maxLength)}... ` // Truncated view
                     : feature.description // Full view
@@ -50,7 +50,7 @@ const MiniFeatureCard = ({ feature }) => {
                     {shouldTruncate && (
                         <button
                             onClick={toggleReadMore}
-                            className="text-indigo-600 underline text-xs ml-1"
+                            className="text-indigo-600 dark:text-indigo-400 underline text-xs ml-1 transition-all duration-300"
                         >
                             {readMore ? "Show less" : "Read more"}
                         </button>
