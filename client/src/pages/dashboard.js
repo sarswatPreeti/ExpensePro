@@ -301,7 +301,7 @@ const DashboardPage = () => {
     return (
       <div title={hasExpense ? `₹${total.toFixed(2)} spent` : ""}>
         {hasExpense && (
-          <div className="h-2 w-2 rounded-full bg-red-500 mx-auto mt-1" />
+          <div className="h-1 sm:h-2 w-1 sm:w-2 rounded-full bg-red-500 mx-auto mt-1" />
         )}
       </div>
     );
@@ -340,20 +340,20 @@ const DashboardPage = () => {
   };
 
   const SummaryCard = ({ icon, label, value }) => (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md flex items-center gap-4 transition-all duration-300">
-      {icon}
+    <div className="bg-white dark:bg-gray-800 p-3 sm:p-4 md:p-6 rounded-xl shadow-md flex items-center gap-2 sm:gap-3 md:gap-4 transition-all duration-300">
+      <div className="text-xl sm:text-2xl md:text-3xl">{icon}</div>
       <div>
-        <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
-        <p className="text-xl font-semibold text-gray-800 dark:text-gray-100">{value}</p>
+        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{label}</p>
+        <p className="text-sm sm:text-base md:text-xl font-semibold text-gray-800 dark:text-gray-100">{value}</p>
       </div>
     </div>
   );
 
   const ComparisonCard = ({ label, amount, change, color }) => (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md transition-all duration-300">
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">{label}</p>
-      <p className={`text-2xl font-bold ${textColorMap[color]} dark:text-${color}-400`}>
-        ₹{amount.toFixed(2)} <span className="text-sm">{change}</span>
+    <div className="bg-white dark:bg-gray-800 p-3 sm:p-4 md:p-6 rounded-xl shadow-md transition-all duration-300">
+      <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-1">{label}</p>
+      <p className={`text-lg sm:text-xl md:text-2xl font-bold ${textColorMap[color]} dark:text-${color}-400`}>
+        ₹{amount.toFixed(2)} <span className="text-xs sm:text-sm">{change}</span>
       </p>
     </div>
   );
@@ -361,17 +361,17 @@ const DashboardPage = () => {
   const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#14b8a6"];
 
   const CategoryPieChart = ({ data }) => (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg mb-12 transition-all duration-300">
-      <h3 className="text-2xl font-semibold mb-6 text-center text-gray-800 dark:text-gray-100">
+    <div className="bg-white dark:bg-gray-800 p-3 sm:p-4 md:p-6 rounded-2xl shadow-lg mb-8 sm:mb-12 transition-all duration-300">
+      <h3 className="text-lg sm:text-xl md:text-2xl font-semibold mb-4 sm:mb-6 text-center text-gray-800 dark:text-gray-100">
         💹 Spending Distribution by Category
       </h3>
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height={300}>
         <PieChart>
           <Pie
             data={data}
             dataKey="value"
             nameKey="name"
-            outerRadius={140}
+            outerRadius={100}
             label={({ percent, name }) => `${name} ${(percent * 100).toFixed(1)}%`}
           >
             {data.map((entry, index) => (
@@ -386,11 +386,11 @@ const DashboardPage = () => {
   );
 
   const ExpenseTrendChart = ({ data }) => (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg mb-12 transition-all duration-300">
-      <h3 className="text-2xl font-semibold mb-6 text-center text-gray-800 dark:text-gray-100">
+    <div className="bg-white dark:bg-gray-800 p-3 sm:p-4 md:p-6 rounded-2xl shadow-lg mb-8 sm:mb-12 transition-all duration-300">
+      <h3 className="text-lg sm:text-xl md:text-2xl font-semibold mb-4 sm:mb-6 text-center text-gray-800 dark:text-gray-100">
         📈 Expense Trend Over Time
       </h3>
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={250}>
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
@@ -400,10 +400,10 @@ const DashboardPage = () => {
             textAnchor="end"
             interval={0}
             height={60}
-            tick={{ fontSize: 12 }}
+            tick={{ fontSize: 10 }}
           />
           <YAxis
-            tick={{ fontSize: 12 }}
+            tick={{ fontSize: 10 }}
             domain={[0, (dataMax) => Math.ceil(dataMax * 1.2)]}
           />
           <Tooltip
@@ -424,16 +424,16 @@ const DashboardPage = () => {
   );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto bg-gray-50 dark:bg-gray-900 min-h-screen space-y-12 transition-all duration-300">
-      <h2 className="text-4xl font-bold text-center text-gray-800 dark:text-gray-100 mb-10 animate-fade-in">
+    <div className="p-3 sm:p-4 md:p-6 max-w-7xl mx-auto bg-gray-50 dark:bg-gray-900 min-h-screen space-y-8 sm:space-y-10 md:space-y-12 transition-all duration-300">
+      <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-800 dark:text-gray-100 mb-6 sm:mb-8 md:mb-10 animate-fade-in">
         📊 Expense Dashboard Overview
       </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-10">
         {/* Summary Cards */}
-        <SummaryCard icon={<FaWallet className="text-3xl text-blue-600 dark:text-blue-400" />} label="Total Spent" value={`₹${totalSpent.toFixed(2)}`} />
-        <SummaryCard icon={<FaListUl className="text-3xl text-indigo-600 dark:text-indigo-400" />} label="Transactions" value={totalTransactions} />
-        <SummaryCard icon={<FaTags className="text-3xl text-green-600 dark:text-green-400" />} label="Categories Used" value={categoryCount} />
+        <SummaryCard icon={<FaWallet className="text-blue-600 dark:text-blue-400" />} label="Total Spent" value={`₹${totalSpent.toFixed(2)}`} />
+        <SummaryCard icon={<FaListUl className="text-indigo-600 dark:text-indigo-400" />} label="Transactions" value={totalTransactions} />
+        <SummaryCard icon={<FaTags className="text-green-600 dark:text-green-400" />} label="Categories Used" value={categoryCount} />
 
         {/* Comparison Cards */}
         <ComparisonCard label="Today vs Yesterday" amount={todayTotal} change={todayTrend.change} color="blue" />
@@ -442,16 +442,16 @@ const DashboardPage = () => {
       </div>
 
       {/* Calendar + Weekly Chart + Recent Expenses */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
         {/* Calendar Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-md p-5 w-full col-span-1 transition-all duration-300">
-          <div className="flex justify-between items-center mb-3 px-1">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">📅 Select Date</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-md p-3 sm:p-4 md:p-5 w-full col-span-1 transition-all duration-300">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mb-3 px-1">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100">📅 Select Date</h3>
             {!selectedDate &&
               (activeStartDate.getMonth() !== new Date().getMonth() ||
                 activeStartDate.getFullYear() !== new Date().getFullYear()) && (
                 <button
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-md transition-all duration-300"
+                  className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-900/30 px-2 sm:px-3 py-1 rounded-md transition-all duration-300"
                   onClick={() => setActiveStartDate(new Date())}
                 >
                   🔄 Return to{" "}
@@ -476,7 +476,7 @@ const DashboardPage = () => {
           />
           {selectedDate && (
             <button
-              className="mt-4 w-full py-2 bg-red-500 dark:bg-red-600 text-white text-sm rounded hover:bg-red-600 dark:hover:bg-red-700 transition-all duration-300"
+              className="mt-3 sm:mt-4 w-full py-1.5 sm:py-2 bg-red-500 dark:bg-red-600 text-white text-xs sm:text-sm rounded hover:bg-red-600 dark:hover:bg-red-700 transition-all duration-300"
               onClick={() => {
                 const now = new Date();
                 setCalendarDate(now);
@@ -490,15 +490,15 @@ const DashboardPage = () => {
         </div>
 
         {/* Weekly Bar Chart */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg col-span-2 transition-all duration-300">
-          <h3 className="text-2xl font-semibold mb-6 text-center text-gray-800 dark:text-gray-100">
+        <div className="bg-white dark:bg-gray-800 p-3 sm:p-4 md:p-6 rounded-2xl shadow-lg col-span-2 transition-all duration-300">
+          <h3 className="text-lg sm:text-xl md:text-2xl font-semibold mb-4 sm:mb-6 text-center text-gray-800 dark:text-gray-100">
             📅 Last 7 Days Spending
           </h3>
 
           {loading ? (
-            <p className="text-center text-gray-500 dark:text-gray-400">Loading chart...</p>
+            <p className="text-center text-gray-500 dark:text-gray-400 text-sm sm:text-base">Loading chart...</p>
           ): dayWiseData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250}>
               <BarChart
                 data={dayWiseData}
                 margin={{ top: 20, right: 30, left: 10, bottom: 40 }}
@@ -508,12 +508,12 @@ const DashboardPage = () => {
                 <XAxis
                   dataKey="day"
                   tickFormatter={(value) => value.slice(0, 3)}
-                  tick={{ fontSize: 13, fill: "#6b7280" }}
+                  tick={{ fontSize: 11, fill: "#6b7280" }}
                   axisLine={{ stroke: "#374151" }}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 13, fill: "#6b7280" }}
+                  tick={{ fontSize: 11, fill: "#6b7280" }}
                   axisLine={{ stroke: "#374151" }}
                   tickLine={false}
                 />
@@ -532,7 +532,7 @@ const DashboardPage = () => {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="text-center text-gray-400 dark:text-gray-500 italic col-span-2">
+            <div className="text-center text-gray-400 dark:text-gray-500 italic col-span-2 text-sm sm:text-base">
               No expense data for the last 7 days.
             </div>
           )}
@@ -540,9 +540,9 @@ const DashboardPage = () => {
       </div>
 
       {/* Recent Expenses - full width below */}
-      <div className="mb-12 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md transition-all duration-300">
-        <h3 className="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-100">🕒 Recent Expenses</h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+      <div className="mb-8 sm:mb-12 bg-white dark:bg-gray-800 p-3 sm:p-4 md:p-6 rounded-2xl shadow-md transition-all duration-300">
+        <h3 className="text-lg sm:text-xl md:text-2xl font-semibold mb-4 sm:mb-6 text-gray-800 dark:text-gray-100">🕒 Recent Expenses</h3>
+        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-4 sm:mb-6">
           Showing expenses for:{" "}
           <span className="text-gray-800 dark:text-gray-200 font-medium">
             {selectedDate
@@ -556,21 +556,21 @@ const DashboardPage = () => {
         </p>
         <ul className="divide-y divide-gray-200 dark:divide-gray-700">
           {recentExpenses.map((exp, index) => (
-            <li key={index} className="py-3 flex justify-between items-center">
+            <li key={index} className="py-2 sm:py-3 flex justify-between items-center">
               <div>
-                <p className="text-gray-700 dark:text-gray-200 font-medium">{exp.title}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm sm:text-base text-gray-700 dark:text-gray-200 font-medium">{exp.title}</p>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                   {new Date(exp.date).toLocaleDateString()} — {getCategoryNameFromExpense(exp)}
                 </p>
               </div>
-              <p className="text-blue-600 dark:text-blue-400 font-bold">₹{Number(exp.amount).toFixed(2)}</p>
+              <p className="text-blue-600 dark:text-blue-400 font-bold text-sm sm:text-base">₹{Number(exp.amount).toFixed(2)}</p>
             </li>
           ))}
         </ul>
-        <div className="mt-4 text-right">
+        <div className="mt-3 sm:mt-4 text-right">
           <button
             onClick={() => navigate("/expenses")}
-            className="text-sm px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-all duration-300"
+            className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-all duration-300"
           >
             View All Expenses
           </button>
@@ -583,10 +583,10 @@ const DashboardPage = () => {
       )}
 
       {/* Trend Filter */}
-      <div className="mb-4 flex items-center gap-4 justify-end">
-        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Trend Period:</label>
+      <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 justify-end">
+        <label className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">Trend Period:</label>
         <select
-          className="border border-gray-300 dark:border-gray-600 rounded px-3 py-1 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 transition-all duration-300"
+          className="border border-gray-300 dark:border-gray-600 rounded px-2 sm:px-3 py-1 text-xs sm:text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 transition-all duration-300"
           value={filterDays || ""}
           onChange={(e) => setFilterDays(e.target.value ? Number(e.target.value) : null)}
         >
@@ -608,7 +608,7 @@ const DashboardPage = () => {
       {trendData.length > 0 ? (
         <ExpenseTrendChart data={trendData} />
       ) : (
-        <div className="text-center text-gray-500 dark:text-gray-400 mb-12">
+        <div className="text-center text-gray-500 dark:text-gray-400 mb-8 sm:mb-12 text-sm sm:text-base">
           No data to display in this period.
         </div>
       )}
