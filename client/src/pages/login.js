@@ -8,6 +8,7 @@ import {
   sendEmailVerification,
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import axios from "../api/axiosInstance";
 import { app } from "../services/firebase"; // Firebase app config
 import { Eye, EyeOff, Loader2, Mail, Lock, LogIn} from "lucide-react";
@@ -34,6 +35,7 @@ const LoginPage = () => {
   const [resendMsg, setResendMsg] = useState("");
   const [loginUser, setLoginUser] = useState(null);
   const navigate = useNavigate();
+  const { fetchUserProfile } = useAuth();
   const auth = getAuth(app);
 
   // Update form state on input change
@@ -79,6 +81,9 @@ const LoginPage = () => {
       const backendToken = response.data.token;
       localStorage.setItem("jwtToken", backendToken);
 
+      // Fetch user profile
+      await fetchUserProfile();
+
       setMessage("Login successful!");
       navigate("/dashboard");
     } catch (err) {
@@ -116,6 +121,9 @@ const LoginPage = () => {
 
       const backendToken = response.data.token;
       localStorage.setItem("jwtToken", backendToken);
+
+      // Fetch user profile
+      await fetchUserProfile();
 
       navigate("/dashboard", { replace: true });
     } catch (err) {
@@ -263,7 +271,7 @@ const LoginPage = () => {
 
         {/* Footer Link */}
         <div className="mt-4 text-sm text-center text-gray-600 dark:text-gray-400 transition-all duration-300">
-          Don’t have an account?{" "}
+          Don't have an account?{" "}
           <a
             className="text-blue-600 hover:text-blue-800 font-medium dark:text-indigo-400 dark:hover:text-indigo-500"
             onClick={() => navigate("/register")}
