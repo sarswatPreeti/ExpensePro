@@ -35,10 +35,10 @@ const FeatureSection = ({
                 {/* -------- Our Features Header (Only for the first section) -------- */}
                 {isFirst && (
                     <div className="text-center max-w-4xl mx-auto mt-20 mb-20 px-4">
-                        <h2 className="text-4xl sm:text-5xl font-extrabold bg-gradient-to-r from-indigo-700 to-purple-700 text-transparent bg-clip-text mb-4 animate-fade-in">
+                        <h2 className="text-4xl sm:text-5xl font-extrabold bg-gradient-to-r from-indigo-700 to-purple-700 dark:from-indigo-400 dark:to-purple-400 text-transparent bg-clip-text mb-4 animate-fade-in">
                             🌟 Our Features
                         </h2>
-                        <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
+                        <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
                             Discover all the powerful tools that help you track your expenses easily and efficiently.Whether it's recording a new purchase, reviewing your spending habits, or managing categories,our features are designed to make money management stress-free.
                         </p>
                     </div>
@@ -68,12 +68,12 @@ const FeatureSection = ({
                     {/* -------- Text & Expandable Mini Features -------- */}
                     <div className="w-full lg:w-1/2 text-center lg:text-left space-y-4">
                         {/* Feature Title */}
-                        <h3 className="font-bold text-indigo-700 text-2xl sm:text-3xl md:text-4xl">
+                        <h3 className="font-bold text-indigo-700 dark:text-indigo-400 text-2xl sm:text-3xl md:text-4xl">
                             {title}
                         </h3>
 
                         {/* Feature Description */}
-                        <p className="text-gray-600 text-sm sm:text-base md:text-lg">
+                        <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base md:text-lg">
                             {description}
                         </p>
 
@@ -81,7 +81,7 @@ const FeatureSection = ({
                         {miniFeatures.length > 0 && (
                             <button
                             onClick={() => setIsExpanded(!isExpanded)} // Toggle feature card expansion
-                            className="text-indigo-600 font-medium underline hover:text-indigo-800 transition"
+                            className="text-indigo-600 dark:text-indigo-400 font-medium underline hover:text-indigo-800 dark:hover:text-indigo-300 transition-all duration-300"
                             >
                             {isExpanded ? "Show Less" : "Explore More"}
                             </button>
