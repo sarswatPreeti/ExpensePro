@@ -28,12 +28,12 @@ const MainLayout = ({ children }) => {
   const shouldHideSidebar = hideSidebarRoutes.includes(currentPath);
 
   return (
-    <div className="flex">
+    <div className="flex transition-all duration-300">
       {/* Conditionally render the Sidebar unless on excluded routes */}
       {!shouldHideSidebar && <Sidebar />}
 
       {/* Main content area; apply left margin if sidebar is shown */}
-      <main className={`${!shouldHideSidebar ? "ml-64" : ""} w-full bg-gray-100 min-h-screen`}>
+      <main className={`${!shouldHideSidebar ? "ml-64" : ""} w-full bg-gray-100 dark:bg-gray-900 min-h-screen transition-all duration-300`}>
 
         <div className="flex justify-end">
           <DarkModeToggle isDark={darkMode} toggle={() => setDarkMode(!darkMode)} />
