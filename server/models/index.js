@@ -9,26 +9,36 @@ const sequelize = new Sequelize(
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
     dialect: "postgres",
-    logging: false, // Disable logging in production
+    logging: false,
   }
 );
 
 const db = {};
-
-// Attach Sequelize core objects
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
-// Initialize models
 db.User = require("./user")(sequelize, Sequelize.DataTypes);
-db.Expense = require("./expense")(sequelize, Sequelize.DataTypes);
 db.Category = require("./category")(sequelize, Sequelize.DataTypes);
+db.Expense = require("./expense")(sequelize, Sequelize.DataTypes);
 
-// Apply associations automatically if defined
 Object.keys(db).forEach((modelName) => {
   if (db[modelName].associate) {
     db[modelName].associate(db);
   }
 });
+
+// Safe sync - no force:true in production
+db.sync = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log("✅ PostgreSQL connected");
+
+    await sequelize.sync({ alter: true }); // alter instead of force
+    console.log("✅ Database synced");
+  } catch (error) {
+    console.error("❌ Error syncing database:", error);
+    process.exit(1);
+  }
+};
 
 module.exports = db;
