@@ -12,6 +12,7 @@ import axios from "../api/axiosInstance";
 import {Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useAuth } from "../contexts/AuthContext";
 
 // SignupPage component handles user registration using Firebase Auth with email/password and Google OAuth.
 // Includes form validation, password generation, password strength feedback, and email verification flow.
@@ -32,6 +33,7 @@ const SignupPage = () => {
   const [showPasswordInfo, setShowPasswordInfo] = useState(false);
 
   const navigate = useNavigate();
+  const { fetchUserProfile } = useAuth();
 
   // Basic password strength evaluator based on length and character mix
   const getPasswordStrength = (password) => {
@@ -154,6 +156,9 @@ const SignupPage = () => {
           const backendToken = response.data.token;
           localStorage.setItem("jwtToken", backendToken);
 
+          // Fetch user profile
+          await fetchUserProfile();
+
           setMessage("Email verified! Redirecting to dashboard...");
           navigate("/dashboard");
         }
@@ -186,6 +191,9 @@ const SignupPage = () => {
 
       const backendToken = response.data.token;
       localStorage.setItem("jwtToken", backendToken);
+
+      // Fetch user profile
+      await fetchUserProfile();
 
       setMessage("Google signup successful!");
       navigate("/dashboard");
