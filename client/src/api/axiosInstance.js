@@ -5,11 +5,10 @@ import { getAuth } from "firebase/auth";
  * Create a custom axios instance with base configuration.
  * This will be used throughout the app to make API calls to backend.
  */
+const apiBaseUrl = process.env.REACT_APP_API_URL || "http://localhost:4000/api";
+
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:4000/api", /// 🔄 Consider using environment variables instead of hardcoding
-  // headers: {
-  //   "Content-Type": "application/json", // Sets JSON as the default content type
-  // },
+  baseURL: apiBaseUrl,
 });
 
 axiosInstance.interceptors.request.use(
@@ -57,7 +56,7 @@ axiosInstance.interceptors.response.use(
 
         // Get a new custom JWT from your backend
         // Send the refreshed Firebase token to your backend to get a new JWT
-        const res = await axios.post("http://localhost:4000/api/auth/firebase-login", {
+        const res = await axios.post(`${apiBaseUrl}/auth/firebase-login`, {
           firebaseToken: idToken,
         });
 
