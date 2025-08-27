@@ -28,6 +28,11 @@ app.use("/api/categories", require("./routes/categories"));
 app.use("/api/expenses", require("./routes/expenses"));
 app.use("/api/profile", require("./routes/profile"));
 
+// Test route
+app.get("/api/test", (req, res) => {
+  res.json({ message: "API is running!" });
+});
+
 // 404 handler
 app.use((req, res, next) => {
   res.status(404).json({ error: "API route not found" });
