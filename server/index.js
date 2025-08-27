@@ -11,9 +11,10 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 // Middlewares
+const allowedOrigin = process.env.CORS_ORIGIN || "http://localhost:3000";
 app.use(cors({
-  origin: "http://localhost:3000", // or your frontend domain
-  credentials: true
+  origin: allowedOrigin,
+  credentials: true,
 }));
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));
