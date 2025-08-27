@@ -13,7 +13,9 @@ const PORT = process.env.PORT || 4000;
 // Middlewares
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://expense-gn1gz68v3-preeti-saraswats-projects.vercel.app"
+  "http://expense-pro-six.vercel.app",
+  "https://expense-gn1gz68v3-preeti-saraswats-projects.vercel.app",
+  "https://expense-7ohqm3uxd-preeti-saraswats-projects.vercel.app"
 ];
 
 // Add any additional origins from environment variable
