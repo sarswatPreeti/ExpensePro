@@ -28,11 +28,6 @@ app.use("/api/categories", require("./routes/categories"));
 app.use("/api/expenses", require("./routes/expenses"));
 app.use("/api/profile", require("./routes/profile"));
 
-// Test DB connection
-sequelize.authenticate()
-  .then(() => console.log("✅ PostgreSQL connected"))
-  .catch((err) => console.error("❌ DB connection error:", err));
-
 // 404 handler
 app.use((req, res, next) => {
   res.status(404).json({ error: "API route not found" });
