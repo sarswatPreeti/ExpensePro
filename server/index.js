@@ -85,14 +85,6 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Something went wrong on the server." });
 });
 
-// // Sync DB and start server
-// db.sequelize.sync().then(() => {
-//   app.listen(PORT, () => {
-//     console.log(`🚀 Server running at http://localhost:${PORT}`);
-//     console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
-//   });
-// });
-
 // Connect & sync DB, then start server
 (async () => {
   try {
