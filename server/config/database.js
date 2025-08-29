@@ -6,6 +6,14 @@ const isProduction = process.env.NODE_ENV === "production";
 // Prefer single DATABASE_URL if provided (e.g., Neon/Render), fallback to discrete env vars
 const databaseUrl = process.env.DATABASE_URL;
 
+console.log("🔍 Environment Debug:");
+console.log("NODE_ENV:", process.env.NODE_ENV);
+console.log("DATABASE_URL exists:", !!process.env.DATABASE_URL);
+console.log("DATABASE_URL length:", process.env.DATABASE_URL?.length || 0);
+console.log("DB_HOST:", process.env.DB_HOST);
+console.log("DB_NAME:", process.env.DB_NAME);
+console.log("All env keys containing 'DB':", Object.keys(process.env).filter(key => key.includes('DB')));
+
 // Minimal, safe visibility into which DB config path is used (no secrets printed)
 try {
   if (databaseUrl) {
