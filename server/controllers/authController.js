@@ -94,8 +94,9 @@ exports.forgotPassword = async (req, res) => {
   try {
 
     // 🔗 Generate a Firebase password reset link with a redirect URL (used after successful reset)
+    const frontendBaseUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     const resetLink = await admin.auth().generatePasswordResetLink(email, {
-      url: "http://localhost:3000/login", // your frontend redirect URL
+      url: `${frontendBaseUrl}/login`,
     });
 
     // Optionally, send this reset link via your own email service (nodemailer, etc.)
