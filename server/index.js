@@ -85,21 +85,25 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Something went wrong on the server." });
 });
 
-// Connect & sync DB, then start server
+// Start HTTP server immediately so health routes respond even if DB is booting
+app.listen(PORT, () => {
+  console.log(`🚀 Server running and listening on port ${PORT}`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
+});
+
+// Connect & sync DB in background (non-blocking)
 (async () => {
   try {
+    console.log("⏳ Attempting to connect to PostgreSQL...");
     await db.sequelize.authenticate();
     console.log("✅ PostgreSQL connected");
 
-    // Do NOT drop tables on every start. Use FORCE_SYNC=true only when intentionally resetting.
     const shouldForceSync = process.env.FORCE_SYNC === "true";
+    if (shouldForceSync) {
+      console.warn("⚠️ FORCE_SYNC is enabled. This will drop and recreate tables.");
+    }
     await db.sequelize.sync({ force: shouldForceSync });
-    // console.log(`✅ Database synced successfully! force=${shouldForceSync}`);
-
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running at http://localhost:${PORT}`);
-      console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
-    });
+    console.log(`✅ Database synced successfully (force=${shouldForceSync})`);
   } catch (err) {
     console.error("❌ DB connection or sync error:", err);
   }
