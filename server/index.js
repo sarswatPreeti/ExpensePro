@@ -5,7 +5,8 @@ const dotenv = require("dotenv");
 const db = require("./models");
 const sequelize = require("./config/database");
 
-dotenv.config(); // Load environment variables
+// Load environment variables
+dotenv.config(); 
 
 const app = express();
 const PORT = process.env.PORT || 4000;
