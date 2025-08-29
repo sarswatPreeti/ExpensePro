@@ -6,6 +6,21 @@ const isProduction = process.env.NODE_ENV === "production";
 // Prefer single DATABASE_URL if provided (e.g., Neon/Render), fallback to discrete env vars
 const databaseUrl = process.env.DATABASE_URL;
 
+// Minimal, safe visibility into which DB config path is used (no secrets printed)
+try {
+  if (databaseUrl) {
+    const redacted = databaseUrl.replace(/:(?:[^:@/]+)@/, ":***@");
+    console.log("🗄️ Using DATABASE_URL for Postgres:", redacted);
+  } else {
+    console.log(
+      "🗄️ Using discrete DB vars for Postgres host=",
+      process.env.DB_HOST || "<missing>",
+      " db=",
+      process.env.DB_NAME || "<missing>"
+    );
+  }
+} catch (_) {}
+
 const sequelize = databaseUrl
   ? new Sequelize(databaseUrl, {
       dialect: "postgres",
