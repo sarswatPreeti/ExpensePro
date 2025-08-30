@@ -9,17 +9,20 @@ const sequelize = require("./config/database");
 dotenv.config(); 
 
 const app = express();
+// Railway typically uses port 3000 by default
 const PORT = process.env.PORT || 3000;
 
 // Debug port information
 console.log('🔍 Port Debug:');
 console.log('PORT env var:', process.env.PORT);
 console.log('Using port:', PORT);
+console.log('Railway PORT env var:', process.env.RAILWAY_STATIC_URL);
 console.log('All env vars:', Object.keys(process.env));
 
 // Middlewares
 const allowedOrigins = [
   "http://localhost:3000",
+  "https://expense-pro-six.vercel.app",
   "https://expense-gn1gz68v3-preeti-saraswats-projects.vercel.app",
   "https://expense-7ohqm3uxd-preeti-saraswats-projects.vercel.app"
 ];
@@ -104,10 +107,18 @@ app.use((err, req, res, next) => {
 });
 
 // Start HTTP server immediately so health routes respond even if DB is booting
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`🚀 Server running and listening on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
   console.log(`🔗 Server URL: http://localhost:${PORT}`);
+});
+
+// Add error handling
+server.on('error', (error) => {
+  console.error('❌ Server error:', error);
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use`);
+  }
 });
 
 // Connect & sync DB in background (non-blocking)
