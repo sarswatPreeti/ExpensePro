@@ -58,12 +58,15 @@ try {
         });
         console.log("✅ Firebase Admin initialized from local file");
       } catch (fileError) {
-        console.warn("⚠️ Firebase service account not provided. Admin not initialized.");
+        console.error("❌ Firebase service account file not found:", fileError.message);
+        console.warn("⚠️ Firebase Admin not initialized - authentication will fail");
+        // Don't throw error, let server start but log the issue
       }
     }
   }
 } catch (error) {
-  console.error("Firebase admin initialization error:", error.message);
+  console.error("❌ Firebase admin initialization error:", error.message);
+  // Don't throw error, let server start but log the issue
 }
 
 module.exports = admin;

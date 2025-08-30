@@ -27,7 +27,7 @@ db.sync = async () => {
     console.log("✅ Database synced");
   } catch (error) {
     console.error("❌ Error syncing database:", error);
-    process.exit(1);
+    // Don't exit process, let the main index.js handle it
   }
 };
 
