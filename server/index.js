@@ -81,18 +81,33 @@ app.use("/api/profile", require("./routes/profile"));
 
 // Health check route
 app.get("/", (req, res) => {
+  console.log('🏥 Health check request received');
   res.json({ 
     message: "Server is running!", 
     status: "healthy",
     port: PORT,
     env: process.env.NODE_ENV,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    headers: req.headers
   });
 });
 
 // Test route
 app.get("/api/test", (req, res) => {
+  console.log('🧪 Test route request received');
   res.json({ message: "API is running!" });
+});
+
+// Simple ping route
+app.get("/ping", (req, res) => {
+  console.log('🏓 Ping request received');
+  res.status(200).send("pong");
+});
+
+// Even simpler health check
+app.get("/health", (req, res) => {
+  console.log('💚 Health check received');
+  res.status(200).send("ok");
 });
 
 // 404 handler
@@ -107,10 +122,11 @@ app.use((err, req, res, next) => {
 });
 
 // Start HTTP server immediately so health routes respond even if DB is booting
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running and listening on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
-  console.log(`🔗 Server URL: http://localhost:${PORT}`);
+  console.log(`🔗 Server URL: http://0.0.0.0:${PORT}`);
+  console.log(`🔗 Local URL: http://localhost:${PORT}`);
 });
 
 // Add error handling
