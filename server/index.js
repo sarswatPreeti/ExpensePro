@@ -9,7 +9,13 @@ const sequelize = require("./config/database");
 dotenv.config(); 
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
+
+// Debug port information
+console.log('🔍 Port Debug:');
+console.log('PORT env var:', process.env.PORT);
+console.log('Using port:', PORT);
+console.log('All env vars:', Object.keys(process.env));
 
 // Middlewares
 const allowedOrigins = [
@@ -72,7 +78,13 @@ app.use("/api/profile", require("./routes/profile"));
 
 // Health check route
 app.get("/", (req, res) => {
-  res.json({ message: "Server is running!", status: "healthy" });
+  res.json({ 
+    message: "Server is running!", 
+    status: "healthy",
+    port: PORT,
+    env: process.env.NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Test route
@@ -92,10 +104,10 @@ app.use((err, req, res, next) => {
 });
 
 // Start HTTP server immediately so health routes respond even if DB is booting
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, () => {
   console.log(`🚀 Server running and listening on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
-  console.log(`🔗 Server URL: http://0.0.0.0:${PORT}`);
+  console.log(`🔗 Server URL: http://localhost:${PORT}`);
 });
 
 // Connect & sync DB in background (non-blocking)
