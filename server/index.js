@@ -107,7 +107,13 @@ app.get("/ping", (req, res) => {
 // Even simpler health check
 app.get("/health", (req, res) => {
   console.log('💚 Health check received');
-  res.status(200).send("ok");
+  res.status(200).json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    port: PORT
+  });
 });
 
 // 404 handler
@@ -137,6 +143,15 @@ server.on('error', (error) => {
   }
 });
 
+// Add process error handling
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 // Connect & sync DB in background (non-blocking)
 (async () => {
   try {
@@ -152,5 +167,8 @@ server.on('error', (error) => {
     console.log(`✅ Database synced successfully (force=${shouldForceSync})`);
   } catch (err) {
     console.error("❌ DB connection or sync error:", err);
+    console.error("❌ Full error details:", err.message);
+    // Don't exit the process, let the server continue running
+    // The server can still handle requests even if DB is down
   }
 })();
