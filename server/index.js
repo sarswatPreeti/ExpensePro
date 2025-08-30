@@ -152,22 +152,14 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
-// Connect & sync DB in background (non-blocking)
+// Initialize database connection (non-blocking)
 (async () => {
   try {
-    console.log("⏳ Attempting to connect to PostgreSQL...");
-    await db.sequelize.authenticate();
-    console.log("✅ PostgreSQL connected");
-
-    const shouldForceSync = process.env.FORCE_SYNC === "true";
-    if (shouldForceSync) {
-      console.warn("⚠️ FORCE_SYNC is enabled. This will drop and recreate tables.");
-    }
-    await db.sequelize.sync({ force: shouldForceSync });
-    console.log(`✅ Database synced successfully (force=${shouldForceSync})`);
+    console.log("⏳ Initializing database connection...");
+    await db.sync();
+    console.log("✅ Database initialization complete");
   } catch (err) {
-    console.error("❌ DB connection or sync error:", err);
-    console.error("❌ Full error details:", err.message);
+    console.error("❌ Database initialization error:", err);
     // Don't exit the process, let the server continue running
     // The server can still handle requests even if DB is down
   }
