@@ -9,7 +9,7 @@ const sequelize = require("./config/database");
 dotenv.config(); 
 
 const app = express();
-// Railway typically uses port 3000 by default
+// Railway uses PORT environment variable
 const PORT = process.env.PORT || 3000;
 
 // Debug port information
@@ -24,7 +24,8 @@ const allowedOrigins = [
   "http://localhost:3000",
   "https://expense-pro-six.vercel.app",
   "https://expense-gn1gz68v3-preeti-saraswats-projects.vercel.app",
-  "https://expense-7ohqm3uxd-preeti-saraswats-projects.vercel.app"
+  "https://expense-7ohqm3uxd-preeti-saraswats-projects.vercel.app",
+  "https://expensepro-production.up.railway.app"
 ];
 
 // Add any additional origins from environment variable
@@ -33,37 +34,14 @@ if (process.env.CORS_ORIGIN) {
   allowedOrigins.push(...envOrigins);
 }
 
-// Temporary: Allow all origins for debugging (REMOVE IN PRODUCTION)
-const isDevelopment = process.env.NODE_ENV !== 'production';
-if (isDevelopment || process.env.ALLOW_ALL_ORIGINS === 'true') {
-  app.use(cors({
-    origin: true, // Allow all origins
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-  }));
-  console.log('🚨 CORS: Allowing ALL origins (development mode)');
-} else {
-  app.use(cors({
-    origin: function (origin, callback) {
-      console.log('CORS Origin check:', origin);
-      console.log('Allowed origins:', allowedOrigins);
-      
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
-      
-      if (allowedOrigins.indexOf(origin) !== -1) {
-        callback(null, true);
-      } else {
-        console.log('CORS blocked origin:', origin);
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-  }));
-}
+// CORS configuration - allow all origins temporarily to fix 502 errors
+app.use(cors({
+  origin: true, // Allow all origins
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+console.log('🌐 CORS: Allowing all origins to fix 502 errors');
 
 // Handle preflight requests explicitly
 app.options('*', cors());
@@ -88,7 +66,10 @@ app.get("/", (req, res) => {
     port: PORT,
     env: process.env.NODE_ENV,
     timestamp: new Date().toISOString(),
-    headers: req.headers
+    cors: {
+      allowedOrigins: allowedOrigins,
+      currentOrigin: req.headers.origin
+    }
   });
 });
 
