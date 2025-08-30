@@ -5,7 +5,7 @@ import { getAuth } from "firebase/auth";
  * Create a custom axios instance with base configuration.
  * This will be used throughout the app to make API calls to backend.
  */
-const apiBaseUrl = process.env.REACT_APP_API_URL || "http://localhost:4000/api";
+const apiBaseUrl = process.env.REACT_APP_API_URL || "https://expensepro-production.up.railway.app/api";
 
 const axiosInstance = axios.create({
   baseURL: apiBaseUrl,
