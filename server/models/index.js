@@ -17,14 +17,19 @@ Object.keys(db).forEach((modelName) => {
   }
 });
 
-// Safe sync - no force:true in production
+// Safe sync - no alter:true in production
 db.sync = async () => {
   try {
     await sequelize.authenticate();
     console.log("✅ PostgreSQL connected");
 
-    await sequelize.sync({ alter: true }); // alter instead of force
-    console.log("✅ Database synced");
+    // In production, don't alter tables - just verify connection
+    if (process.env.NODE_ENV === 'production') {
+      console.log("✅ Database connection verified (production mode)");
+    } else {
+      await sequelize.sync({ alter: true }); // Only in development
+      console.log("✅ Database synced");
+    }
   } catch (error) {
     console.error("❌ Error syncing database:", error);
     // Don't exit process, let the main index.js handle it
