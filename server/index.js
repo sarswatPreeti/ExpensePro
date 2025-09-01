@@ -25,7 +25,7 @@ const allowedOrigins = [
   "https://expense-pro-six.vercel.app",
   "https://expense-gn1gz68v3-preeti-saraswats-projects.vercel.app",
   "https://expense-7ohqm3uxd-preeti-saraswats-projects.vercel.app",
-  "https://expensepro-production.up.railway.app"
+  "https://expensepro-uhru.onrender.com/api"
 ];
 
 // Add any additional origins from environment variable
