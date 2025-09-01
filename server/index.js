@@ -9,15 +9,16 @@ const sequelize = require("./config/database");
 dotenv.config(); 
 
 const app = express();
+
 // Railway uses PORT environment variable
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
 // Debug port information
-console.log('🔍 Port Debug:');
-console.log('PORT env var:', process.env.PORT);
-console.log('Using port:', PORT);
-console.log('Railway PORT env var:', process.env.RAILWAY_STATIC_URL);
-console.log('All env vars:', Object.keys(process.env));
+// console.log('🔍 Port Debug:');
+// console.log('PORT env var:', process.env.PORT);
+// console.log('Using port:', PORT);
+// console.log('Railway PORT env var:', process.env.RAILWAY_STATIC_URL);
+// console.log('All env vars:', Object.keys(process.env));
 
 // Middlewares
 const allowedOrigins = [
@@ -41,7 +42,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
-console.log('🌐 CORS: Allowing all origins to fix 502 errors');
+// console.log('🌐 CORS: Allowing all origins to fix 502 errors');
 
 // Handle preflight requests explicitly
 app.options('*', cors());
@@ -112,8 +113,8 @@ app.use((err, req, res, next) => {
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running and listening on port ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || "development"}`);
-  console.log(`🔗 Server URL: http://0.0.0.0:${PORT}`);
-  console.log(`🔗 Local URL: http://localhost:${PORT}`);
+  // console.log(`🔗 Server URL: http://0.0.0.0:${PORT}`);
+  // console.log(`🔗 Local URL: http://localhost:${PORT}`);
 });
 
 // Add error handling
