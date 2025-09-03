@@ -31,8 +31,10 @@ const Sidebar = () => {
       
       <div className="p-2 sm:p-3 md:p-4 lg:p-6">
         <h1 className="text-lg sm:text-xl md:text-2xl lg:text-2xl xl:text-2xl font-bold mb-4 sm:mb-6 md:mb-8 text-yellow-600 dark:text-yellow-400 truncate">
-          <span className="hidden md:inline">💰 ExpensePro</span>
-          <span className="md:hidden">💰</span>
+          <Link to="/" className="hidden md:inline font-bold text-lg">
+            💰 ExpensePro
+          </Link>
+          <Link to="/" className="md:hidden">💰</Link>
         </h1>
         <nav className="space-y-2 sm:space-y-3 md:space-y-4">
           {navItems.map((item) => (
